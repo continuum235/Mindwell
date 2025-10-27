@@ -1,0 +1,319 @@
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { moodAPI } from '../utils/moodApi';
+import { Link } from 'react-router-dom';
+
+const MoodTracker = () => {
+  const { user } = useAuth();
+  const [selectedMood, setSelectedMood] = useState('');
+  const [note, setNote] = useState('');
+  const [entries, setEntries] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [viewPeriod, setViewPeriod] = useState(30);
+
+  const moods = [
+    { value: 'excellent', label: 'Excellent', emoji: '😄', color: 'bg-green-500', hoverColor: 'hover:bg-green-600' },
+    { value: 'good', label: 'Good', emoji: '😊', color: 'bg-blue-500', hoverColor: 'hover:bg-blue-600' },
+    { value: 'okay', label: 'Okay', emoji: '😐', color: 'bg-yellow-500', hoverColor: 'hover:bg-yellow-600' },
+    { value: 'bad', label: 'Bad', emoji: '😟', color: 'bg-orange-500', hoverColor: 'hover:bg-orange-600' },
+    { value: 'terrible', label: 'Terrible', emoji: '😢', color: 'bg-red-500', hoverColor: 'hover:bg-red-600' },
+  ];
+
+  const loadMoodData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const [entriesData, statsData] = await Promise.all([
+        moodAPI.getMoodEntries({ limit: 50 }),
+        moodAPI.getMoodStats(viewPeriod),
+      ]);
+      setEntries(entriesData);
+      setStats(statsData);
+    } catch (err) {
+      console.error('Error loading mood data:', err);
+      setError(err.message || 'Failed to load mood data. Please try logging in again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [viewPeriod]);
+
+  useEffect(() => {
+    if (user) {
+      console.log('User logged in:', user);
+      loadMoodData();
+    } else {
+      console.log('No user logged in');
+      setError('Please log in to track your mood');
+    }
+  }, [user, loadMoodData]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedMood) {
+      setError('Please select a mood');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      await moodAPI.createMoodEntry({
+        mood: selectedMood,
+        note: note.trim(),
+      });
+      setSuccess('Mood logged successfully!');
+      setSelectedMood('');
+      setNote('');
+      setTimeout(() => setSuccess(''), 3000);
+      loadMoodData();
+    } catch (err) {
+      setError(err.message || 'Failed to log mood');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteMoodEntry = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this entry?')) {
+      return;
+    }
+
+    try {
+      await moodAPI.deleteMoodEntry(id);
+      loadMoodData();
+    } catch (err) {
+      setError('Failed to delete entry');
+      console.error(err);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const getMoodEmoji = (moodValue) => {
+    const mood = moods.find(m => m.value === moodValue);
+    return mood ? mood.emoji : '😐';
+  };
+
+  const getMoodColor = (moodValue) => {
+    const mood = moods.find(m => m.value === moodValue);
+    return mood ? mood.color : 'bg-gray-500';
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Mood Tracker</h1>
+        <p className="text-xl text-gray-600">
+          Track your daily mood to identify patterns and improve emotional awareness
+        </p>
+      </div>
+
+      {!user && (
+        <div className="max-w-md mx-auto bg-yellow-50 border border-yellow-200 text-yellow-800 px-6 py-4 rounded-lg mb-6">
+          <p className="font-medium mb-2">Please log in to track your mood</p>
+          <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
+            Go to Login →
+          </Link>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          {success}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">How are you feeling?</h2>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4 mb-6">
+                {moods.map((mood) => (
+                  <button
+                    key={mood.value}
+                    type="button"
+                    onClick={() => setSelectedMood(mood.value)}
+                    className={`w-full p-4 rounded-lg border-2 transition-all ${
+                      selectedMood === mood.value
+                        ? `${mood.color} text-white border-transparent shadow-lg`
+                        : `bg-white text-gray-700 border-gray-300 ${mood.hoverColor} hover:text-white`
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-3xl">{mood.emoji}</span>
+                        <span className="font-medium text-lg">{mood.label}</span>
+                      </div>
+                      {selectedMood === mood.value && (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Add a note (optional)
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="What's on your mind?"
+                  rows="3"
+                  maxLength="500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">{note.length}/500 characters</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !selectedMood}
+                className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Logging...' : 'Log Mood'}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 space-y-8">
+          {stats && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">Mood Overview</h2>
+                <select
+                  value={viewPeriod}
+                  onChange={(e) => setViewPeriod(Number(e.target.value))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value={7}>Last 7 days</option>
+                  <option value={30}>Last 30 days</option>
+                  <option value={90}>Last 90 days</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-gray-600 mb-4">
+                  Total entries: <span className="font-semibold text-gray-900">{stats.totalEntries}</span>
+                </p>
+                
+                <div className="space-y-3">
+                  {moods.map((mood) => {
+                    const count = stats.moodCounts[mood.value];
+                    const percentage = stats.totalEntries > 0 
+                      ? ((count / stats.totalEntries) * 100).toFixed(0) 
+                      : 0;
+                    
+                    return (
+                      <div key={mood.value}>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xl">{mood.emoji}</span>
+                            <span className="text-sm font-medium text-gray-700">{mood.label}</span>
+                          </div>
+                          <span className="text-sm text-gray-600">{count} ({percentage}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`${mood.color} h-2 rounded-full transition-all duration-500`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Recent Entries</h2>
+            
+            {loading && entries.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+              </div>
+            ) : entries.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg">No mood entries yet.</p>
+                <p className="text-sm mt-2">Start tracking your mood to see your history here!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {entries.map((entry) => (
+                  <div
+                    key={entry._id}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <span className="text-3xl">{getMoodEmoji(entry.mood)}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className={`inline-block px-2 py-1 rounded text-white text-sm font-medium ${getMoodColor(entry.mood)}`}>
+                              {entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1)}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {formatDate(entry.date)} at {formatTime(entry.date)}
+                            </span>
+                          </div>
+                          {entry.note && (
+                            <p className="text-gray-700 mt-2">{entry.note}</p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteMoodEntry(entry._id)}
+                        className="text-red-500 hover:text-red-700 ml-4"
+                        title="Delete entry"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MoodTracker;

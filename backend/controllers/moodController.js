@@ -1,0 +1,174 @@
+import asyncHandler from 'express-async-handler';
+import MoodEntry from '../models/moodModel.js';
+
+// @desc    Create a new mood entry
+// @route   POST /api/mood
+// @access  Private
+const createMoodEntry = asyncHandler(async (req, res) => {
+  const { mood, note, date } = req.body;
+
+  // Check if user is authenticated
+  if (!req.user || !req.user._id) {
+    res.status(401);
+    throw new Error('Not authorized, please log in');
+  }
+
+  // Validate required fields
+  if (!mood) {
+    res.status(400);
+    throw new Error('Mood is required');
+  }
+
+  // Create mood entry
+  const moodEntry = await MoodEntry.create({
+    user: req.user._id,
+    mood,
+    note: note || '',
+    date: date || new Date(),
+  });
+
+  res.status(201).json(moodEntry);
+});
+
+// @desc    Get all mood entries for logged in user
+// @route   GET /api/mood
+// @access  Private
+const getMoodEntries = asyncHandler(async (req, res) => {
+  // Check if user is authenticated
+  if (!req.user || !req.user._id) {
+    res.status(401);
+    throw new Error('Not authorized, please log in');
+  }
+
+  const { startDate, endDate, limit } = req.query;
+
+  let query = { user: req.user._id };
+
+  // Add date range filter if provided
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
+  }
+
+  const entries = await MoodEntry.find(query)
+    .sort({ date: -1 })
+    .limit(limit ? parseInt(limit) : 100);
+
+  res.json(entries);
+});
+
+// @desc    Get mood entry by ID
+// @route   GET /api/mood/:id
+// @access  Private
+const getMoodEntryById = asyncHandler(async (req, res) => {
+  const moodEntry = await MoodEntry.findById(req.params.id);
+
+  if (!moodEntry) {
+    res.status(404);
+    throw new Error('Mood entry not found');
+  }
+
+  // Check if the mood entry belongs to the user
+  if (moodEntry.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to access this mood entry');
+  }
+
+  res.json(moodEntry);
+});
+
+// @desc    Update a mood entry
+// @route   PUT /api/mood/:id
+// @access  Private
+const updateMoodEntry = asyncHandler(async (req, res) => {
+  const { mood, note } = req.body;
+
+  const moodEntry = await MoodEntry.findById(req.params.id);
+
+  if (!moodEntry) {
+    res.status(404);
+    throw new Error('Mood entry not found');
+  }
+
+  // Check if the mood entry belongs to the user
+  if (moodEntry.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to update this mood entry');
+  }
+
+  moodEntry.mood = mood || moodEntry.mood;
+  moodEntry.note = note !== undefined ? note : moodEntry.note;
+
+  const updatedMoodEntry = await moodEntry.save();
+  res.json(updatedMoodEntry);
+});
+
+// @desc    Delete a mood entry
+// @route   DELETE /api/mood/:id
+// @access  Private
+const deleteMoodEntry = asyncHandler(async (req, res) => {
+  const moodEntry = await MoodEntry.findById(req.params.id);
+
+  if (!moodEntry) {
+    res.status(404);
+    throw new Error('Mood entry not found');
+  }
+
+  // Check if the mood entry belongs to the user
+  if (moodEntry.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to delete this mood entry');
+  }
+
+  await MoodEntry.deleteOne({ _id: req.params.id });
+  res.json({ message: 'Mood entry removed' });
+});
+
+// @desc    Get mood stats for logged in user
+// @route   GET /api/mood/stats
+// @access  Private
+const getMoodStats = asyncHandler(async (req, res) => {
+  // Check if user is authenticated
+  if (!req.user || !req.user._id) {
+    res.status(401);
+    throw new Error('Not authorized, please log in');
+  }
+
+  const { days = 30 } = req.query;
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - parseInt(days));
+
+  const entries = await MoodEntry.find({
+    user: req.user._id,
+    date: { $gte: startDate },
+  }).sort({ date: 1 });
+
+  // Calculate mood distribution
+  const moodCounts = {
+    excellent: 0,
+    good: 0,
+    okay: 0,
+    bad: 0,
+    terrible: 0,
+  };
+
+  entries.forEach((entry) => {
+    moodCounts[entry.mood]++;
+  });
+
+  res.json({
+    totalEntries: entries.length,
+    moodCounts,
+    entries,
+  });
+});
+
+export {
+  createMoodEntry,
+  getMoodEntries,
+  getMoodEntryById,
+  updateMoodEntry,
+  deleteMoodEntry,
+  getMoodStats,
+};
