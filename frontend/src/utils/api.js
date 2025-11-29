@@ -1,5 +1,5 @@
 // API base URL - update this to match your backend URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 // Helper function to make API requests
 const apiRequest = async (endpoint, options = {}) => {
