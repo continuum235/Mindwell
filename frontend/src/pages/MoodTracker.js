@@ -26,29 +26,24 @@ const MoodTracker = () => {
     try {
       setLoading(true);
       setError('');
+      const params = user ? { limit: 50, user: user._id } : { limit: 50 };
       const [entriesData, statsData] = await Promise.all([
-        moodAPI.getMoodEntries({ limit: 50 }),
-        moodAPI.getMoodStats(viewPeriod),
+        moodAPI.getMoodEntries(params),
+        moodAPI.getMoodStats(viewPeriod, user?._id),
       ]);
       setEntries(entriesData);
       setStats(statsData);
     } catch (err) {
       console.error('Error loading mood data:', err);
-      setError(err.message || 'Failed to load mood data. Please try logging in again.');
+      setError(err.message || 'Failed to load mood data.');
     } finally {
       setLoading(false);
     }
-  }, [viewPeriod]);
+  }, [viewPeriod, user]);
 
   useEffect(() => {
-    if (user) {
-      console.log('User logged in:', user);
-      loadMoodData();
-    } else {
-      console.log('No user logged in');
-      setError('Please log in to track your mood');
-    }
-  }, [user, loadMoodData]);
+    loadMoodData();
+  }, [loadMoodData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,10 +56,14 @@ const MoodTracker = () => {
     try {
       setLoading(true);
       setError('');
-      await moodAPI.createMoodEntry({
+      const moodData = {
         mood: selectedMood,
         note: note.trim(),
-      });
+      };
+      if (user) {
+        moodData.user = user._id;
+      }
+      await moodAPI.createMoodEntry(moodData);
       setSuccess('Mood logged successfully!');
       setSelectedMood('');
       setNote('');
@@ -126,16 +125,12 @@ const MoodTracker = () => {
         <p className="text-xl text-gray-600">
           Track your daily mood to identify patterns and improve emotional awareness
         </p>
+        {!user && (
+          <p className="text-sm text-gray-500 mt-2">
+            Tip: <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">Log in</Link> to save your mood history across devices
+          </p>
+        )}
       </div>
-
-      {!user && (
-        <div className="max-w-md mx-auto bg-yellow-50 border border-yellow-200 text-yellow-800 px-6 py-4 rounded-lg mb-6">
-          <p className="font-medium mb-2">Please log in to track your mood</p>
-          <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
-            Go to Login →
-          </Link>
-        </div>
-      )}
 
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">

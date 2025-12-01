@@ -3,15 +3,9 @@ import MoodEntry from '../models/moodModel.js';
 
 // @desc    Create a new mood entry
 // @route   POST /api/mood
-// @access  Private
+// @access  Public
 const createMoodEntry = asyncHandler(async (req, res) => {
-  const { mood, note, date } = req.body;
-
-  // Check if user is authenticated
-  if (!req.user || !req.user._id) {
-    res.status(401);
-    throw new Error('Not authorized, please log in');
-  }
+  const { mood, note, date, user } = req.body;
 
   // Validate required fields
   if (!mood) {
@@ -21,7 +15,7 @@ const createMoodEntry = asyncHandler(async (req, res) => {
 
   // Create mood entry
   const moodEntry = await MoodEntry.create({
-    user: req.user._id,
+    user: user || null,
     mood,
     note: note || '',
     date: date || new Date(),
@@ -30,19 +24,18 @@ const createMoodEntry = asyncHandler(async (req, res) => {
   res.status(201).json(moodEntry);
 });
 
-// @desc    Get all mood entries for logged in user
+// @desc    Get all mood entries
 // @route   GET /api/mood
-// @access  Private
+// @access  Public
 const getMoodEntries = asyncHandler(async (req, res) => {
-  // Check if user is authenticated
-  if (!req.user || !req.user._id) {
-    res.status(401);
-    throw new Error('Not authorized, please log in');
+  const { startDate, endDate, limit, user } = req.query;
+
+  let query = {};
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
   }
-
-  const { startDate, endDate, limit } = req.query;
-
-  let query = { user: req.user._id };
 
   // Add date range filter if provided
   if (startDate || endDate) {
@@ -60,7 +53,7 @@ const getMoodEntries = asyncHandler(async (req, res) => {
 
 // @desc    Get mood entry by ID
 // @route   GET /api/mood/:id
-// @access  Private
+// @access  Public
 const getMoodEntryById = asyncHandler(async (req, res) => {
   const moodEntry = await MoodEntry.findById(req.params.id);
 
@@ -69,18 +62,12 @@ const getMoodEntryById = asyncHandler(async (req, res) => {
     throw new Error('Mood entry not found');
   }
 
-  // Check if the mood entry belongs to the user
-  if (moodEntry.user.toString() !== req.user._id.toString()) {
-    res.status(403);
-    throw new Error('Not authorized to access this mood entry');
-  }
-
   res.json(moodEntry);
 });
 
 // @desc    Update a mood entry
 // @route   PUT /api/mood/:id
-// @access  Private
+// @access  Public
 const updateMoodEntry = asyncHandler(async (req, res) => {
   const { mood, note } = req.body;
 
@@ -89,12 +76,6 @@ const updateMoodEntry = asyncHandler(async (req, res) => {
   if (!moodEntry) {
     res.status(404);
     throw new Error('Mood entry not found');
-  }
-
-  // Check if the mood entry belongs to the user
-  if (moodEntry.user.toString() !== req.user._id.toString()) {
-    res.status(403);
-    throw new Error('Not authorized to update this mood entry');
   }
 
   moodEntry.mood = mood || moodEntry.mood;
@@ -106,7 +87,7 @@ const updateMoodEntry = asyncHandler(async (req, res) => {
 
 // @desc    Delete a mood entry
 // @route   DELETE /api/mood/:id
-// @access  Private
+// @access  Public
 const deleteMoodEntry = asyncHandler(async (req, res) => {
   const moodEntry = await MoodEntry.findById(req.params.id);
 
@@ -115,34 +96,28 @@ const deleteMoodEntry = asyncHandler(async (req, res) => {
     throw new Error('Mood entry not found');
   }
 
-  // Check if the mood entry belongs to the user
-  if (moodEntry.user.toString() !== req.user._id.toString()) {
-    res.status(403);
-    throw new Error('Not authorized to delete this mood entry');
-  }
-
   await MoodEntry.deleteOne({ _id: req.params.id });
   res.json({ message: 'Mood entry removed' });
 });
 
-// @desc    Get mood stats for logged in user
+// @desc    Get mood stats
 // @route   GET /api/mood/stats
-// @access  Private
+// @access  Public
 const getMoodStats = asyncHandler(async (req, res) => {
-  // Check if user is authenticated
-  if (!req.user || !req.user._id) {
-    res.status(401);
-    throw new Error('Not authorized, please log in');
-  }
-
-  const { days = 30 } = req.query;
+  const { days = 30, user } = req.query;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - parseInt(days));
 
-  const entries = await MoodEntry.find({
-    user: req.user._id,
+  let query = {
     date: { $gte: startDate },
-  }).sort({ date: 1 });
+  };
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
+  }
+
+  const entries = await MoodEntry.find(query).sort({ date: 1 });
 
   // Calculate mood distribution
   const moodCounts = {

@@ -20,8 +20,13 @@ export const moodAPI = {
   },
 
   // Get mood stats
-  getMoodStats: async (days = 30) => {
-    return apiRequest(`/api/mood/stats?days=${days}`, {
+  getMoodStats: async (days = 30, userId = null) => {
+    const params = { days };
+    if (userId) {
+      params.user = userId;
+    }
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/api/mood/stats?${queryString}`, {
       method: 'GET',
     });
   },

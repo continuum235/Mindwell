@@ -3,9 +3,9 @@ import JournalEntry from '../models/journalModel.js';
 
 // @desc    Create a new journal entry
 // @route   POST /api/journal
-// @access  Private
+// @access  Public
 const createJournalEntry = asyncHandler(async (req, res) => {
-  const { content, date } = req.body;
+  const { content, date, user } = req.body;
 
   // Validate required fields
   if (!content || content.trim() === '') {
@@ -15,7 +15,7 @@ const createJournalEntry = asyncHandler(async (req, res) => {
 
   // Create journal entry
   const journalEntry = await JournalEntry.create({
-    user: req.user._id,
+    user: user || null,
     content: content.trim(),
     date: date || new Date(),
   });
@@ -23,13 +23,18 @@ const createJournalEntry = asyncHandler(async (req, res) => {
   res.status(201).json(journalEntry);
 });
 
-// @desc    Get all journal entries for logged in user
+// @desc    Get all journal entries
 // @route   GET /api/journal
-// @access  Private
+// @access  Public
 const getJournalEntries = asyncHandler(async (req, res) => {
-  const { startDate, endDate, limit } = req.query;
+  const { startDate, endDate, limit, user } = req.query;
 
-  let query = { user: req.user._id };
+  let query = {};
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
+  }
 
   // Filter by date range if provided
   if (startDate || endDate) {
@@ -47,7 +52,7 @@ const getJournalEntries = asyncHandler(async (req, res) => {
 
 // @desc    Get a single journal entry by ID
 // @route   GET /api/journal/:id
-// @access  Private
+// @access  Public
 const getJournalEntryById = asyncHandler(async (req, res) => {
   const journalEntry = await JournalEntry.findById(req.params.id);
 
@@ -56,30 +61,18 @@ const getJournalEntryById = asyncHandler(async (req, res) => {
     throw new Error('Journal entry not found');
   }
 
-  // Check if the journal entry belongs to the logged in user
-  if (journalEntry.user.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to view this journal entry');
-  }
-
   res.json(journalEntry);
 });
 
 // @desc    Update a journal entry
 // @route   PUT /api/journal/:id
-// @access  Private
+// @access  Public
 const updateJournalEntry = asyncHandler(async (req, res) => {
   const journalEntry = await JournalEntry.findById(req.params.id);
 
   if (!journalEntry) {
     res.status(404);
     throw new Error('Journal entry not found');
-  }
-
-  // Check if the journal entry belongs to the logged in user
-  if (journalEntry.user.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to update this journal entry');
   }
 
   // Update fields
@@ -93,19 +86,13 @@ const updateJournalEntry = asyncHandler(async (req, res) => {
 
 // @desc    Delete a journal entry
 // @route   DELETE /api/journal/:id
-// @access  Private
+// @access  Public
 const deleteJournalEntry = asyncHandler(async (req, res) => {
   const journalEntry = await JournalEntry.findById(req.params.id);
 
   if (!journalEntry) {
     res.status(404);
     throw new Error('Journal entry not found');
-  }
-
-  // Check if the journal entry belongs to the logged in user
-  if (journalEntry.user.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to delete this journal entry');
   }
 
   await JournalEntry.deleteOne({ _id: req.params.id });
@@ -115,18 +102,25 @@ const deleteJournalEntry = asyncHandler(async (req, res) => {
 
 // @desc    Get journal entry for today
 // @route   GET /api/journal/today
-// @access  Private
+// @access  Public
 const getTodayJournalEntry = asyncHandler(async (req, res) => {
+  const { user } = req.query;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const journalEntry = await JournalEntry.findOne({
-    user: req.user._id,
+  let query = {
     date: { $gte: today, $lt: tomorrow }
-  }).sort({ date: -1 });
+  };
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
+  }
+
+  const journalEntry = await JournalEntry.findOne(query).sort({ date: -1 });
 
   if (!journalEntry) {
     return res.json(null);
