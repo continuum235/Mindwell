@@ -4,14 +4,11 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 // Helper function to make API requests
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
-   // Get token from localStorage for each request
-  const token = localStorage.getItem("token");
   
   const config = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
     credentials: 'include', // Important: This sends cookies with the request
