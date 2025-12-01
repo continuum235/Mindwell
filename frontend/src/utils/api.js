@@ -1,6 +1,8 @@
 // API base URL - update this to match your backend URL
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
+  const token = localStorage.getItem("token");
+
 // Helper function to make API requests
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -9,6 +11,7 @@ const apiRequest = async (endpoint, options = {}) => {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
     credentials: 'include', // Important: This sends cookies with the request
