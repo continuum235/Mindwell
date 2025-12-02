@@ -11,16 +11,16 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// All routes are protected (require authentication)
+// Routes are public but can optionally use authentication
 router.route('/')
-  .get(protect, getJournalEntries)
-  .post(protect, createJournalEntry);
+  .get(getJournalEntries)
+  .post(createJournalEntry);
 
-router.get('/today', protect, getTodayJournalEntry);
+router.get('/today', getTodayJournalEntry);
 
 router.route('/:id')
-  .get(protect, getJournalEntryById)
-  .put(protect, updateJournalEntry)
-  .delete(protect, deleteJournalEntry);
+  .get(getJournalEntryById)
+  .put(updateJournalEntry)
+  .delete(deleteJournalEntry);
 
 export default router;

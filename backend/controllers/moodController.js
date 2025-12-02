@@ -3,15 +3,9 @@ import MoodEntry from '../models/moodModel.js';
 
 // @desc    Create a new mood entry
 // @route   POST /api/mood
-// @access  Private
+// @access  Public (optional auth)
 const createMoodEntry = asyncHandler(async (req, res) => {
-  const { mood, note, date } = req.body;
-
-  // Check if user is authenticated
-  if (!req.user || !req.user._id) {
-    res.status(401);
-    throw new Error('Not authorized, please log in');
-  }
+  const { mood, note, date, user } = req.body;
 
   // Validate required fields
   if (!mood) {
@@ -19,9 +13,9 @@ const createMoodEntry = asyncHandler(async (req, res) => {
     throw new Error('Mood is required');
   }
 
-  // Create mood entry
+  // Create mood entry (user is optional)
   const moodEntry = await MoodEntry.create({
-    user: req.user._id,
+    user: user || null,
     mood,
     note: note || '',
     date: date || new Date(),
@@ -30,19 +24,18 @@ const createMoodEntry = asyncHandler(async (req, res) => {
   res.status(201).json(moodEntry);
 });
 
-// @desc    Get all mood entries for logged in user
+// @desc    Get all mood entries (optionally filtered by user)
 // @route   GET /api/mood
-// @access  Private
+// @access  Public
 const getMoodEntries = asyncHandler(async (req, res) => {
-  // Check if user is authenticated
-  if (!req.user || !req.user._id) {
-    res.status(401);
-    throw new Error('Not authorized, please log in');
+  const { startDate, endDate, limit, user } = req.query;
+
+  let query = {};
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
   }
-
-  const { startDate, endDate, limit } = req.query;
-
-  let query = { user: req.user._id };
 
   // Add date range filter if provided
   if (startDate || endDate) {
@@ -125,24 +118,24 @@ const deleteMoodEntry = asyncHandler(async (req, res) => {
   res.json({ message: 'Mood entry removed' });
 });
 
-// @desc    Get mood stats for logged in user
+// @desc    Get mood stats (optionally filtered by user)
 // @route   GET /api/mood/stats
-// @access  Private
+// @access  Public
 const getMoodStats = asyncHandler(async (req, res) => {
-  // Check if user is authenticated
-  if (!req.user || !req.user._id) {
-    res.status(401);
-    throw new Error('Not authorized, please log in');
-  }
-
-  const { days = 30 } = req.query;
+  const { days = 30, user } = req.query;
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - parseInt(days));
 
-  const entries = await MoodEntry.find({
-    user: req.user._id,
+  let query = {
     date: { $gte: startDate },
-  }).sort({ date: 1 });
+  };
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
+  }
+
+  const entries = await MoodEntry.find(query).sort({ date: 1 });
 
   // Calculate mood distribution
   const moodCounts = {

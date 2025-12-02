@@ -11,17 +11,17 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// All routes are protected (require authentication)
+// Routes are public but can optionally use authentication
 // Note: /stats must come before /:id to avoid route matching issues
-router.get('/stats', protect, getMoodStats);
+router.get('/stats', getMoodStats);
 
 router.route('/')
-  .get(protect, getMoodEntries)
-  .post(protect, createMoodEntry);
+  .get(getMoodEntries)
+  .post(createMoodEntry);
 
 router.route('/:id')
-  .get(protect, getMoodEntryById)
-  .put(protect, updateMoodEntry)
-  .delete(protect, deleteMoodEntry);
+  .get(getMoodEntryById)
+  .put(updateMoodEntry)
+  .delete(deleteMoodEntry);
 
 export default router;

@@ -3,9 +3,9 @@ import JournalEntry from '../models/journalModel.js';
 
 // @desc    Create a new journal entry
 // @route   POST /api/journal
-// @access  Private
+// @access  Public (optional auth)
 const createJournalEntry = asyncHandler(async (req, res) => {
-  const { content, date } = req.body;
+  const { content, date, user } = req.body;
 
   // Validate required fields
   if (!content || content.trim() === '') {
@@ -13,9 +13,9 @@ const createJournalEntry = asyncHandler(async (req, res) => {
     throw new Error('Please provide journal content');
   }
 
-  // Create journal entry
+  // Create journal entry (user is optional)
   const journalEntry = await JournalEntry.create({
-    user: req.user._id,
+    user: user || null,
     content: content.trim(),
     date: date || new Date(),
   });
@@ -23,13 +23,18 @@ const createJournalEntry = asyncHandler(async (req, res) => {
   res.status(201).json(journalEntry);
 });
 
-// @desc    Get all journal entries for logged in user
+// @desc    Get all journal entries (optionally filtered by user)
 // @route   GET /api/journal
-// @access  Private
+// @access  Public
 const getJournalEntries = asyncHandler(async (req, res) => {
-  const { startDate, endDate, limit } = req.query;
+  const { startDate, endDate, limit, user } = req.query;
 
-  let query = { user: req.user._id };
+  let query = {};
+  
+  // Filter by user if provided
+  if (user) {
+    query.user = user;
+  }
 
   // Filter by date range if provided
   if (startDate || endDate) {
