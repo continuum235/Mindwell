@@ -55,8 +55,8 @@ app.use('/api/mood', moodRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// app.listen(port, () =>
-//   console.log(`Server running on http://localhost:${port}`)
-// );
+app.listen(port, () =>
+  console.log(`Server running on http://localhost:${port}`)
+);
 
 export default app;

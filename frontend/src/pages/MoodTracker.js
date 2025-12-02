@@ -1,7 +1,9 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { moodAPI } from '../utils/moodApi';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const MoodTracker = () => {
   const { user } = useAuth();
@@ -13,6 +15,9 @@ const MoodTracker = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [viewPeriod, setViewPeriod] = useState(30);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [editMood, setEditMood] = useState('');
+  const [editNote, setEditNote] = useState('');
 
   const moods = [
     { value: 'excellent', label: 'Excellent', emoji: '😄', color: 'bg-green-500', hoverColor: 'hover:bg-green-600' },
@@ -26,29 +31,28 @@ const MoodTracker = () => {
     try {
       setLoading(true);
       setError('');
-      const [entriesData, statsData] = await Promise.all([
-        moodAPI.getMoodEntries({ limit: 50 }),
-        moodAPI.getMoodStats(viewPeriod),
+      
+      const params = user ? { limit: 50, user: user._id } : { limit: 50 };
+      const statsParams = { days: viewPeriod };
+      if (user) statsParams.user = user._id;
+
+      const [entriesResponse, statsResponse] = await Promise.all([
+        axios.get(`${API_URL}/api/mood`, { params, withCredentials: true }),
+        axios.get(`${API_URL}/api/mood/stats`, { params: statsParams, withCredentials: true })
       ]);
-      setEntries(entriesData);
-      setStats(statsData);
+      setEntries(entriesResponse.data);
+      setStats(statsResponse.data);
     } catch (err) {
       console.error('Error loading mood data:', err);
-      setError(err.message || 'Failed to load mood data. Please try logging in again.');
+      setError(err.response?.data?.message || err.message || 'Failed to load mood data.');
     } finally {
       setLoading(false);
     }
-  }, [viewPeriod]);
+  }, [viewPeriod, user]);
 
   useEffect(() => {
-    if (user) {
-      console.log('User logged in:', user);
-      loadMoodData();
-    } else {
-      console.log('No user logged in');
-      setError('Please log in to track your mood');
-    }
-  }, [user, loadMoodData]);
+    loadMoodData();
+  }, [loadMoodData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,17 +65,28 @@ const MoodTracker = () => {
     try {
       setLoading(true);
       setError('');
-      await moodAPI.createMoodEntry({
+      
+      const moodData = {
         mood: selectedMood,
         note: note.trim(),
+      };
+      if (user) {
+        moodData.user = user._id;
+      }
+
+      const response = await axios.post(`${API_URL}/api/mood`, moodData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
       });
+
+      setEntries([response.data, ...entries]);
       setSuccess('Mood logged successfully!');
       setSelectedMood('');
       setNote('');
       setTimeout(() => setSuccess(''), 3000);
       loadMoodData();
     } catch (err) {
-      setError(err.message || 'Failed to log mood');
+      setError(err.response?.data?.message || err.message || 'Failed to log mood');
     } finally {
       setLoading(false);
     }
@@ -83,11 +98,61 @@ const MoodTracker = () => {
     }
 
     try {
-      await moodAPI.deleteMoodEntry(id);
+      await axios.delete(`${API_URL}/api/mood/${id}`, { withCredentials: true });
+      setEntries(entries.filter(entry => entry._id !== id));
       loadMoodData();
     } catch (err) {
-      setError('Failed to delete entry');
+      setError(err.response?.data?.message || 'Failed to delete entry');
       console.error(err);
+    }
+  };
+
+  const startEditEntry = (entry) => {
+    setEditingEntry(entry);
+    setEditMood(entry.mood);
+    setEditNote(entry.note || '');
+    setError('');
+  };
+
+  const cancelEdit = () => {
+    setEditingEntry(null);
+    setEditMood('');
+    setEditNote('');
+    setError('');
+  };
+
+  const handleUpdateMood = async (e) => {
+    e.preventDefault();
+    
+    if (!editMood) {
+      setError('Please select a mood');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await axios.put(
+        `${API_URL}/api/mood/${editingEntry._id}`,
+        { mood: editMood, note: editNote.trim() },
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      setEntries(entries.map(entry => 
+        entry._id === editingEntry._id ? response.data : entry
+      ));
+      setSuccess('Mood entry updated successfully!');
+      cancelEdit();
+      setTimeout(() => setSuccess(''), 3000);
+      loadMoodData();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to update mood entry');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,16 +191,12 @@ const MoodTracker = () => {
         <p className="text-xl text-gray-600">
           Track your daily mood to identify patterns and improve emotional awareness
         </p>
+        {!user && (
+          <p className="text-sm text-gray-500 mt-2">
+            Tip: <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">Log in</Link> to save your mood history across devices
+          </p>
+        )}
       </div>
-
-      {!user && (
-        <div className="max-w-md mx-auto bg-yellow-50 border border-yellow-200 text-yellow-800 px-6 py-4 rounded-lg mb-6">
-          <p className="font-medium mb-2">Please log in to track your mood</p>
-          <Link to="/login" className="text-indigo-600 hover:text-indigo-800 font-medium">
-            Go to Login →
-          </Link>
-        </div>
-      )}
 
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -295,15 +356,26 @@ const MoodTracker = () => {
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => deleteMoodEntry(entry._id)}
-                        className="text-red-500 hover:text-red-700 ml-4"
-                        title="Delete entry"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div className="flex space-x-2 ml-4">
+                        <button
+                          onClick={() => startEditEntry(entry)}
+                          className="text-blue-500 hover:text-blue-700"
+                          title="Edit entry"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => deleteMoodEntry(entry._id)}
+                          className="text-red-500 hover:text-red-700"
+                          title="Delete entry"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -312,6 +384,91 @@ const MoodTracker = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">Edit Mood Entry</h2>
+                <button
+                  onClick={cancelEdit}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateMood}>
+                <div className="space-y-4 mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    How are you feeling?
+                  </label>
+                  {moods.map((mood) => (
+                    <button
+                      key={mood.value}
+                      type="button"
+                      onClick={() => setEditMood(mood.value)}
+                      className={`w-full p-3 rounded-lg border-2 transition-all ${
+                        editMood === mood.value
+                          ? `${mood.color} text-white border-transparent shadow-lg`
+                          : `bg-white text-gray-700 border-gray-300 ${mood.hoverColor} hover:text-white`
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{mood.emoji}</span>
+                          <span className="font-medium">{mood.label}</span>
+                        </div>
+                        {editMood === mood.value && (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Note
+                  </label>
+                  <textarea
+                    value={editNote}
+                    onChange={(e) => setEditNote(e.target.value)}
+                    placeholder="What's on your mind?"
+                    rows="3"
+                    maxLength="500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{editNote.length}/500 characters</p>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || !editMood}
+                    className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? 'Updating...' : 'Update'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,9 @@
 // pages/StressManagement.js
 import React, { useState, useEffect } from 'react';
-import { journalAPI } from '../utils/journalApi';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const StressManagement = () => {
   const { user } = useAuth();
@@ -34,7 +36,7 @@ const StressManagement = () => {
 
   // Load journal entries when journal tab is active
   useEffect(() => {
-    if (activeTab === 'journal' && user) {
+    if (activeTab === 'journal') {
       loadJournalEntries();
     }
   }, [activeTab, user]);
@@ -43,10 +45,14 @@ const StressManagement = () => {
     try {
       setLoading(true);
       setError('');
-      const entries = await journalAPI.getJournalEntries({ limit: 50 });
-      setSavedEntries(entries);
+      const params = user ? { limit: 50, user: user._id } : { limit: 50 };
+      const response = await axios.get(`${API_URL}/api/journal`, { 
+        params, 
+        withCredentials: true 
+      });
+      setSavedEntries(response.data);
     } catch (err) {
-      setError(err.message || 'Failed to load journal entries');
+      setError(err.response?.data?.message || err.message || 'Failed to load journal entries');
       console.error('Error loading journal entries:', err);
     } finally {
       setLoading(false);
@@ -73,25 +79,41 @@ const StressManagement = () => {
       
       if (editingId) {
         // Update existing entry
-        const updated = await journalAPI.updateJournalEntry(editingId, {
-          content: journalEntry,
-        });
+        const response = await axios.put(
+          `${API_URL}/api/journal/${editingId}`,
+          { content: journalEntry },
+          { 
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
         setSavedEntries(savedEntries.map(entry => 
-          entry._id === editingId ? updated : entry
+          entry._id === editingId ? response.data : entry
         ));
         setEditingId(null);
       } else {
         // Create new entry
-        const newEntry = await journalAPI.createJournalEntry({
+        const journalData = {
           content: journalEntry,
           date: new Date(),
-        });
-        setSavedEntries([newEntry, ...savedEntries]);
+        };
+        if (user) {
+          journalData.user = user._id;
+        }
+        const response = await axios.post(
+          `${API_URL}/api/journal`,
+          journalData,
+          { 
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        setSavedEntries([response.data, ...savedEntries]);
       }
       
       setJournalEntry('');
     } catch (err) {
-      setError(err.message || 'Failed to save journal entry');
+      setError(err.response?.data?.message || err.message || 'Failed to save journal entry');
       console.error('Error saving journal entry:', err);
     } finally {
       setLoading(false);
@@ -110,10 +132,10 @@ const StressManagement = () => {
     try {
       setLoading(true);
       setError('');
-      await journalAPI.deleteJournalEntry(id);
+      await axios.delete(`${API_URL}/api/journal/${id}`, { withCredentials: true });
       setSavedEntries(savedEntries.filter(entry => entry._id !== id));
     } catch (err) {
-      setError(err.message || 'Failed to delete journal entry');
+      setError(err.response?.data?.message || err.message || 'Failed to delete journal entry');
       console.error('Error deleting journal entry:', err);
     } finally {
       setLoading(false);
