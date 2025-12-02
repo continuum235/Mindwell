@@ -52,7 +52,7 @@ const getJournalEntries = asyncHandler(async (req, res) => {
 
 // @desc    Get a single journal entry by ID
 // @route   GET /api/journal/:id
-// @access  Private
+// @access  Public
 const getJournalEntryById = asyncHandler(async (req, res) => {
   const journalEntry = await JournalEntry.findById(req.params.id);
 
@@ -61,30 +61,18 @@ const getJournalEntryById = asyncHandler(async (req, res) => {
     throw new Error('Journal entry not found');
   }
 
-  // Check if the journal entry belongs to the logged in user
-  if (journalEntry.user.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to view this journal entry');
-  }
-
   res.json(journalEntry);
 });
 
 // @desc    Update a journal entry
 // @route   PUT /api/journal/:id
-// @access  Private
+// @access  Public
 const updateJournalEntry = asyncHandler(async (req, res) => {
   const journalEntry = await JournalEntry.findById(req.params.id);
 
   if (!journalEntry) {
     res.status(404);
     throw new Error('Journal entry not found');
-  }
-
-  // Check if the journal entry belongs to the logged in user
-  if (journalEntry.user.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to update this journal entry');
   }
 
   // Update fields
@@ -98,7 +86,7 @@ const updateJournalEntry = asyncHandler(async (req, res) => {
 
 // @desc    Delete a journal entry
 // @route   DELETE /api/journal/:id
-// @access  Private
+// @access  Public
 const deleteJournalEntry = asyncHandler(async (req, res) => {
   const journalEntry = await JournalEntry.findById(req.params.id);
 
@@ -107,31 +95,31 @@ const deleteJournalEntry = asyncHandler(async (req, res) => {
     throw new Error('Journal entry not found');
   }
 
-  // Check if the journal entry belongs to the logged in user
-  if (journalEntry.user.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to delete this journal entry');
-  }
-
   await JournalEntry.deleteOne({ _id: req.params.id });
 
   res.json({ message: 'Journal entry removed' });
 });
 
-// @desc    Get journal entry for today
+// @desc    Get journal entry for today (optionally filtered by user)
 // @route   GET /api/journal/today
-// @access  Private
+// @access  Public
 const getTodayJournalEntry = asyncHandler(async (req, res) => {
+  const { user } = req.query;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const journalEntry = await JournalEntry.findOne({
-    user: req.user._id,
+  let query = {
     date: { $gte: today, $lt: tomorrow }
-  }).sort({ date: -1 });
+  };
+  
+  if (user) {
+    query.user = user;
+  }
+
+  const journalEntry = await JournalEntry.findOne(query).sort({ date: -1 });
 
   if (!journalEntry) {
     return res.json(null);

@@ -53,7 +53,7 @@ const getMoodEntries = asyncHandler(async (req, res) => {
 
 // @desc    Get mood entry by ID
 // @route   GET /api/mood/:id
-// @access  Private
+// @access  Public
 const getMoodEntryById = asyncHandler(async (req, res) => {
   const moodEntry = await MoodEntry.findById(req.params.id);
 
@@ -62,18 +62,12 @@ const getMoodEntryById = asyncHandler(async (req, res) => {
     throw new Error('Mood entry not found');
   }
 
-  // Check if the mood entry belongs to the user
-  if (moodEntry.user.toString() !== req.user._id.toString()) {
-    res.status(403);
-    throw new Error('Not authorized to access this mood entry');
-  }
-
   res.json(moodEntry);
 });
 
 // @desc    Update a mood entry
 // @route   PUT /api/mood/:id
-// @access  Private
+// @access  Public
 const updateMoodEntry = asyncHandler(async (req, res) => {
   const { mood, note } = req.body;
 
@@ -82,12 +76,6 @@ const updateMoodEntry = asyncHandler(async (req, res) => {
   if (!moodEntry) {
     res.status(404);
     throw new Error('Mood entry not found');
-  }
-
-  // Check if the mood entry belongs to the user
-  if (moodEntry.user.toString() !== req.user._id.toString()) {
-    res.status(403);
-    throw new Error('Not authorized to update this mood entry');
   }
 
   moodEntry.mood = mood || moodEntry.mood;
@@ -99,19 +87,13 @@ const updateMoodEntry = asyncHandler(async (req, res) => {
 
 // @desc    Delete a mood entry
 // @route   DELETE /api/mood/:id
-// @access  Private
+// @access  Public
 const deleteMoodEntry = asyncHandler(async (req, res) => {
   const moodEntry = await MoodEntry.findById(req.params.id);
 
   if (!moodEntry) {
     res.status(404);
     throw new Error('Mood entry not found');
-  }
-
-  // Check if the mood entry belongs to the user
-  if (moodEntry.user.toString() !== req.user._id.toString()) {
-    res.status(403);
-    throw new Error('Not authorized to delete this mood entry');
   }
 
   await MoodEntry.deleteOne({ _id: req.params.id });
