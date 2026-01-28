@@ -1,5 +1,5 @@
 // pages/StressManagement.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
@@ -16,6 +16,11 @@ const StressManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
+  
+  // Audio states
+  const [playingSound, setPlayingSound] = useState(null);
+  const [soundVolume, setSoundVolume] = useState(0.5);
+  const audioRef = useRef(null);
 
   // Breathing exercise timer
   useEffect(() => {
@@ -40,6 +45,37 @@ const StressManagement = () => {
       loadJournalEntries();
     }
   }, [activeTab, user]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        const { audioContext, source } = audioRef.current;
+        if (source && source.nodes) {
+          source.nodes.forEach(node => {
+            try {
+              if (node.stop) node.stop();
+              if (node.disconnect) node.disconnect();
+            } catch (e) {}
+          });
+        }
+        if (audioContext && audioContext.state !== 'closed') {
+          audioContext.close();
+        }
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update volume when it changes
+  useEffect(() => {
+    if (audioRef.current && audioRef.current.masterGain) {
+      audioRef.current.masterGain.gain.setValueAtTime(
+        soundVolume, 
+        audioRef.current.audioContext.currentTime
+      );
+    }
+  }, [soundVolume]);
 
   const loadJournalEntries = async () => {
     try {
@@ -164,6 +200,271 @@ const StressManagement = () => {
     });
   };
 
+  const createWhiteNoise = (audioContext) => {
+    const bufferSize = 4096;
+    const whiteNoise = audioContext.createScriptProcessor(bufferSize, 1, 1);
+    whiteNoise.onaudioprocess = function(e) {
+      const output = e.outputBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+    };
+    return whiteNoise;
+  };
+
+  const createPinkNoise = (audioContext) => {
+    const bufferSize = 4096;
+    const pinkNoise = audioContext.createScriptProcessor(bufferSize, 1, 1);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    
+    pinkNoise.onaudioprocess = function(e) {
+      const output = e.outputBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+        output[i] *= 0.11;
+        b6 = white * 0.115926;
+      }
+    };
+    return pinkNoise;
+  };
+
+  const createOceanWaves = (audioContext) => {
+    const oscillator1 = audioContext.createOscillator();
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    const filter = audioContext.createBiquadFilter();
+    
+    oscillator1.type = 'sine';
+    oscillator1.frequency.setValueAtTime(0.2, audioContext.currentTime);
+    oscillator2.type = 'sine';
+    oscillator2.frequency.setValueAtTime(0.15, audioContext.currentTime);
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, audioContext.currentTime);
+    
+    const noise = createWhiteNoise(audioContext);
+    
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    noise.connect(filter);
+    filter.connect(gainNode);
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    
+    oscillator1.start();
+    oscillator2.start();
+    
+    return { nodes: [oscillator1, oscillator2, noise, gainNode], output: gainNode };
+  };
+
+  const createRain = (audioContext) => {
+    const noise = createPinkNoise(audioContext);
+    const filter = audioContext.createBiquadFilter();
+    const gainNode = audioContext.createGain();
+    
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1000, audioContext.currentTime);
+    filter.Q.setValueAtTime(1, audioContext.currentTime);
+    
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    
+    return { nodes: [noise, gainNode], output: gainNode };
+  };
+
+  const createThunder = (audioContext) => {
+    const noise = createWhiteNoise(audioContext);
+    const filter = audioContext.createBiquadFilter();
+    const gainNode = audioContext.createGain();
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, audioContext.currentTime);
+    
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    
+    // Create rumbling effect
+    const lfo = audioContext.createOscillator();
+    const lfoGain = audioContext.createGain();
+    lfo.frequency.setValueAtTime(0.5, audioContext.currentTime);
+    lfoGain.gain.setValueAtTime(100, audioContext.currentTime);
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+    lfo.start();
+    
+    return { nodes: [noise, lfo, gainNode], output: gainNode };
+  };
+
+  const createWindChimes = (audioContext) => {
+    const gainNode = audioContext.createGain();
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    
+    const frequencies = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+    const oscillators = [];
+    
+    frequencies.forEach((freq, i) => {
+      const osc = audioContext.createOscillator();
+      const oscGain = audioContext.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+      oscGain.gain.setValueAtTime(0, audioContext.currentTime);
+      
+      osc.connect(oscGain);
+      oscGain.connect(gainNode);
+      osc.start();
+      
+      oscillators.push({ osc, gain: oscGain });
+      
+      // Random chime hits
+      setInterval(() => {
+        const now = audioContext.currentTime;
+        oscGain.gain.cancelScheduledValues(now);
+        oscGain.gain.setValueAtTime(0, now);
+        oscGain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 2);
+      }, Math.random() * 3000 + 2000 + i * 500);
+    });
+    
+    return { nodes: oscillators.map(o => o.osc), output: gainNode };
+  };
+
+  const createFireplace = (audioContext) => {
+    const noise = createPinkNoise(audioContext);
+    const filter = audioContext.createBiquadFilter();
+    const gainNode = audioContext.createGain();
+    
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(600, audioContext.currentTime);
+    filter.Q.setValueAtTime(0.5, audioContext.currentTime);
+    
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    
+    // Add crackling effect
+    const crackle = audioContext.createOscillator();
+    const crackleGain = audioContext.createGain();
+    crackle.type = 'square';
+    crackle.frequency.setValueAtTime(50, audioContext.currentTime);
+    crackleGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+    crackle.connect(crackleGain);
+    crackleGain.connect(gainNode);
+    crackle.start();
+    
+    return { nodes: [noise, crackle, gainNode], output: gainNode };
+  };
+
+  const createForest = (audioContext) => {
+    const noise = createPinkNoise(audioContext);
+    const filter = audioContext.createBiquadFilter();
+    const gainNode = audioContext.createGain();
+    
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2000, audioContext.currentTime);
+    filter.Q.setValueAtTime(0.8, audioContext.currentTime);
+    
+    noise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    
+    // Add bird chirps
+    const chirpGain = audioContext.createGain();
+    chirpGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+    chirpGain.connect(gainNode);
+    
+    return { nodes: [noise, gainNode], output: gainNode };
+  };
+
+  const toggleSound = (soundName) => {
+    if (playingSound === soundName) {
+      // Stop the sound
+      if (audioRef.current) {
+        const { audioContext, source } = audioRef.current;
+        if (source.nodes) {
+          source.nodes.forEach(node => {
+            try {
+              if (node.stop) node.stop();
+              if (node.disconnect) node.disconnect();
+            } catch (e) {}
+          });
+        }
+        if (audioContext.state !== 'closed') {
+          audioContext.close();
+        }
+        audioRef.current = null;
+      }
+      setPlayingSound(null);
+    } else {
+      // Stop any currently playing sound
+      if (audioRef.current) {
+        const { audioContext, source } = audioRef.current;
+        if (source.nodes) {
+          source.nodes.forEach(node => {
+            try {
+              if (node.stop) node.stop();
+              if (node.disconnect) node.disconnect();
+            } catch (e) {}
+          });
+        }
+        if (audioContext.state !== 'closed') {
+          audioContext.close();
+        }
+      }
+      
+      // Create new audio context
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const masterGain = audioContext.createGain();
+      masterGain.gain.setValueAtTime(soundVolume, audioContext.currentTime);
+      masterGain.connect(audioContext.destination);
+      
+      // Create the appropriate sound
+      let source;
+      switch(soundName) {
+        case 'Rain':
+          source = createRain(audioContext);
+          break;
+        case 'Ocean Waves':
+          source = createOceanWaves(audioContext);
+          break;
+        case 'Forest':
+          source = createForest(audioContext);
+          break;
+        case 'Thunder':
+          source = createThunder(audioContext);
+          break;
+        case 'Fireplace':
+          source = createFireplace(audioContext);
+          break;
+        case 'Wind Chimes':
+          source = createWindChimes(audioContext);
+          break;
+        case 'White Noise':
+          const noise = createWhiteNoise(audioContext);
+          const whiteGain = audioContext.createGain();
+          whiteGain.gain.setValueAtTime(0.3, audioContext.currentTime);
+          noise.connect(whiteGain);
+          source = { nodes: [noise], output: whiteGain };
+          break;
+        default:
+          source = { nodes: [], output: masterGain };
+      }
+      
+      source.output.connect(masterGain);
+      audioRef.current = { audioContext, source, masterGain };
+      setPlayingSound(soundName);
+    }
+  };
+
   const breathingText = {
     breatheIn: 'Breathe In...',
     hold: 'Hold...',
@@ -181,6 +482,44 @@ const StressManagement = () => {
     { name: 'Body Scan', duration: '15 min', type: 'meditation' },
     { name: 'Mindfulness', duration: '8 min', type: 'meditation' },
     { name: 'Sleep Meditation', duration: '20 min', type: 'meditation' }
+  ];
+
+  const soothingSounds = [
+    { 
+      name: 'Rain', 
+      icon: '🌧️', 
+      color: 'from-blue-400 to-blue-600'
+    },
+    { 
+      name: 'Ocean Waves', 
+      icon: '🌊', 
+      color: 'from-cyan-400 to-blue-500'
+    },
+    { 
+      name: 'Forest', 
+      icon: '🌲', 
+      color: 'from-green-400 to-emerald-600'
+    },
+    { 
+      name: 'Thunder', 
+      icon: '⛈️', 
+      color: 'from-gray-600 to-slate-700'
+    },
+    { 
+      name: 'Fireplace', 
+      icon: '🔥', 
+      color: 'from-orange-400 to-red-500'
+    },
+    { 
+      name: 'Wind Chimes', 
+      icon: '🎐', 
+      color: 'from-purple-400 to-pink-400'
+    },
+    { 
+      name: 'White Noise', 
+      icon: '📻', 
+      color: 'from-gray-400 to-gray-600'
+    }
   ];
 
   return (
@@ -214,6 +553,64 @@ const StressManagement = () => {
       {/* Meditation Tab */}
       {activeTab === 'meditation' && (
         <div className="space-y-8">
+          {/* Soothing Sounds Section */}
+          <div>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Soothing Sounds</h2>
+              <p className="text-gray-600">Click to play ambient sounds for relaxation</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {soothingSounds.map((sound) => (
+                <button
+                  key={sound.name}
+                  onClick={() => toggleSound(sound.name)}
+                  className={`relative overflow-hidden rounded-xl p-6 text-center transition-all duration-300 transform hover:scale-105 ${
+                    playingSound === sound.name
+                      ? `bg-gradient-to-br ${sound.color} shadow-2xl ring-4 ring-white ring-opacity-50`
+                      : 'bg-white shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  <div className={`text-4xl mb-2 ${playingSound === sound.name ? 'animate-pulse' : ''}`}>
+                    {sound.icon}
+                  </div>
+                  <h3 className={`font-semibold text-sm ${
+                    playingSound === sound.name ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {sound.name}
+                  </h3>
+                  {playingSound === sound.name && (
+                    <div className="absolute top-2 right-2">
+                      <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Volume Control */}
+            {playingSound && (
+              <div className="bg-white rounded-xl shadow-lg p-6 max-w-md mx-auto">
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-700 font-medium">🔊 Volume</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={soundVolume}
+                    onChange={(e) => setSoundVolume(parseFloat(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-gray-600 font-medium w-12 text-right">
+                    {Math.round(soundVolume * 100)}%
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Guided Meditations */}
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Guided Meditations</h2>
             <p className="text-gray-600">Select a meditation to begin your practice</p>
