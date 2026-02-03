@@ -16,11 +16,43 @@ const StressManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  
 
   // Audio states
   const [playingSound, setPlayingSound] = useState(null);
   const [soundVolume, setSoundVolume] = useState(0.5);
   const audioRef = useRef(null);
+  
+useEffect(() => {
+if (!isRunning || timeLeft <= 0) {
+if (timeLeft === 0) setIsRunning(false);
+return;
+}
+
+
+const interval = setInterval(() => {
+setTimeLeft(prev => prev - 1);
+}, 1000);
+
+
+return () => clearInterval(interval);
+}, [isRunning, timeLeft]);
+
+
+const startTimer = (minutes) => {
+setTimeLeft(minutes * 60);
+setIsRunning(true);
+};
+
+
+const formatTimer = (seconds) => {
+const m = Math.floor(seconds / 60);
+const s = seconds % 60;
+return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
 
   // Breathing exercise timer
   useEffect(() => {
@@ -493,12 +525,12 @@ const StressManagement = () => {
     breatheOut: 'from-purple-400 to-pink-400'
   };
 
-  const meditationAudios = [
-    { name: 'Guided Meditation', duration: '10 min', type: 'meditation' },
-    { name: 'Body Scan', duration: '15 min', type: 'meditation' },
-    { name: 'Mindfulness', duration: '8 min', type: 'meditation' },
-    { name: 'Sleep Meditation', duration: '20 min', type: 'meditation' }
-  ];
+  // const meditationAudios = [
+  //   { name: 'Guided Meditation', duration: '10 min', type: 'meditation' },
+  //   { name: 'Body Scan', duration: '15 min', type: 'meditation' },
+  //   { name: 'Mindfulness', duration: '8 min', type: 'meditation' },
+  //   { name: 'Sleep Meditation', duration: '20 min', type: 'meditation' }
+  // ];
 
   const soothingSounds = [
     { name: 'Rain', icon: '🌧️', color: 'from-blue-400 to-blue-600' },
@@ -509,6 +541,8 @@ const StressManagement = () => {
     { name: 'Wind Chimes', icon: '🎐', color: 'from-purple-400 to-pink-400' },
     { name: 'White Noise', icon: '📻', color: 'from-gray-400 to-gray-600' }
   ];
+
+ 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -600,7 +634,7 @@ const StressManagement = () => {
             </div>
 
             {/* Guided Meditations */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            {/* <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Guided Meditations
               </h2>
@@ -629,21 +663,34 @@ const StressManagement = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Quick Timer */}
+            
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Quick Meditation Timer
               </h2>
+              <div className='text-center text-4xl font-semibold text-gray-800 mb-6'>
+                {timeLeft > 0 ? formatTimer(timeLeft):"Ready"}
+              </div>
               <div className="flex space-x-4">
-                <button className="flex-1 bg-gradient-to-r from-green-400 to-blue-500 text-white py-4 rounded-lg font-semibold hover:shadow-lg transition-shadow">
+                <button
+                onClick={() => startTimer(5)} 
+                disabled = {isRunning}
+                className="flex-1 bg-gradient-to-r from-green-400 to-blue-500 text-white py-4 rounded-lg font-semibold hover:shadow-lg transition-shadow">
                   5 min
                 </button>
-                <button className="flex-1 bg-gradient-to-r from-blue-400 to-purple-500 text-white py-4 rounded-lg font-semibold hover:shadow-lg transition-shadow">
+                <button 
+                onClick={()=> startTimer(10)}
+                disabled={isRunning}
+                className="flex-1 bg-gradient-to-r from-blue-400 to-purple-500 text-white py-4 rounded-lg font-semibold hover:shadow-lg transition-shadow">
                   10 min
                 </button>
-                <button className="flex-1 bg-gradient-to-r from-purple-400 to-pink-500 text-white py-4 rounded-lg font-semibold hover:shadow-lg transition-shadow">
+                <button 
+                onClick={()=> startTimer(10)}
+                disabled={isRunning}
+                className="flex-1 bg-gradient-to-r from-purple-400 to-pink-500 text-white py-4 rounded-lg font-semibold hover:shadow-lg transition-shadow">
                   15 min
                 </button>
               </div>
