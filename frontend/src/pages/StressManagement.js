@@ -545,7 +545,7 @@ return `${m}:${s.toString().padStart(2, '0')}`;
  
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-accent-50 to-support-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -565,8 +565,8 @@ return `${m}:${s.toString().padStart(2, '0')}`;
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
                 activeTab === tab
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
               {tab === 'meditation' && '🧘 Meditation'}
@@ -646,10 +646,10 @@ return `${m}:${s.toString().padStart(2, '0')}`;
                 {meditationAudios.map((audio, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg hover:shadow-md transition-shadow"
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-accent-50 rounded-lg hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="bg-indigo-600 text-white rounded-full p-3">
+                      <div className="bg-primary-600 text-white rounded-full p-3">
                         🎵
                       </div>
                       <div>
@@ -657,7 +657,7 @@ return `${m}:${s.toString().padStart(2, '0')}`;
                         <p className="text-sm text-gray-600">{audio.duration}</p>
                       </div>
                     </div>
-                    <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <button className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors">
                       Play
                     </button>
                   </div>
@@ -799,7 +799,7 @@ return `${m}:${s.toString().padStart(2, '0')}`;
                   value={journalEntry}
                   onChange={(e) => setJournalEntry(e.target.value)}
                   placeholder="How are you feeling today? What's on your mind?"
-                  className="w-full h-48 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full h-48 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   disabled={loading}
                 />
                 <div className="flex space-x-3">
@@ -843,7 +843,7 @@ return `${m}:${s.toString().padStart(2, '0')}`;
                   {savedEntries.map((entry) => (
                     <div
                       key={entry._id}
-                      className="border-l-4 border-indigo-500 pl-4 py-3 bg-gray-50 rounded relative group"
+                      className="border-l-4 border-primary-500 pl-4 py-3 bg-primary-50 rounded relative group"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-sm text-gray-500">{formatDate(entry.date)}</span>
@@ -877,9 +877,9 @@ return `${m}:${s.toString().padStart(2, '0')}`;
         )}
 
         {/* Resources Section */}
-        <div className="mt-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white text-center">
+        <div className="mt-12 bg-gradient-to-r from-primary-600 to-accent-600 rounded-2xl p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-4">Need Additional Support?</h3>
-          <p className="text-indigo-100 mb-6 max-w-2xl mx-auto">
+          <p className="text-primary-100 mb-6 max-w-2xl mx-auto">
             Remember that these tools are for self-help and should not replace professional
             mental health care when needed.
           </p>
@@ -887,7 +887,7 @@ return `${m}:${s.toString().padStart(2, '0')}`;
             <button className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
               Find a Therapist
             </button>
-            <button className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
+            <button className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary-600 transition-colors">
               Crisis Resources
             </button>
           </div>

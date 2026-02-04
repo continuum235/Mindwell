@@ -1,13 +1,24 @@
 // components/Navbar.js
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../utils/api';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -16,98 +27,97 @@ const Navbar = () => {
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Still logout locally even if API call fails
       logout();
       navigate('/login');
     }
   };
 
+  const isActive = (path) => location.pathname === path;
+  
+  const navLinkClass = (path) => `
+    relative inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-300
+    ${isActive(path) 
+      ? 'text-primary-600 border-b-2 border-primary-600' 
+      : 'text-neutral-600 border-b-2 border-transparent hover:text-primary-600 hover:border-primary-300'
+    }
+  `;
+
   return (
-    <nav className="bg-white shadow-md">
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'glass shadow-lg shadow-primary-500/10' 
+        : 'bg-white/80 backdrop-blur-sm'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex">
+          <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-2xl font-bold text-indigo-600">
+              <Link 
+                to="/" 
+                className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+              >
                 MindWell
               </Link>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                to="/"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
+            <div className="hidden sm:ml-8 sm:flex sm:space-x-1">
+              <Link to="/" className={navLinkClass('/')}>
                 Home
               </Link>
-              <Link
-                to="/assessment"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
+              <Link to="/assessment" className={navLinkClass('/assessment')}>
                 Assessment
               </Link>
-              <Link
-                to="/stress-management"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
+              <Link to="/stress-management" className={navLinkClass('/stress-management')}>
                 Stress Management
               </Link>
-              <Link
-                to="/mood-tracker"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
+              <Link to="/mood-tracker" className={navLinkClass('/mood-tracker')}>
                 Mood Tracker
               </Link>
-              <Link
-                to="/chatbot"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
+              <Link to="/chatbot" className={navLinkClass('/chatbot')}>
                 Chatbot
               </Link>
-              <Link
-                to="/about"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
+              <Link to="/about" className={navLinkClass('/about')}>
                 About
               </Link>
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+
+          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
             {isLoggedIn ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700 text-sm">
+              <>
+                <span className="text-neutral-700 text-sm font-medium">
                   Welcome, {user?.name}
                 </span>
                 <Link
                   to="/profile"
-                  className="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium"
+                  className="text-neutral-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors duration-300"
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-200"
+                  className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-300 hover:-translate-y-0.5"
                 >
                   Logout
                 </button>
-              </div>
+              </>
             ) : (
               <Link
                 to="/login"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+                className="bg-gradient-to-r from-primary-600 to-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 transition-all duration-300 hover:-translate-y-0.5"
               >
                 Login
               </Link>
             )}
           </div>
+
           <div className="-mr-2 flex items-center sm:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-neutral-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
             >
               <span className="sr-only">Open main menu</span>
-              {/* Menu icon */}
               <svg
-                className="h-6 w-6"
+                className={`h-6 w-6 transition-transform duration-300 ${isMenuOpen ? 'rotate-90' : ''}`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -126,79 +136,112 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            <Link
-              to="/"
-              className="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              to="/assessment"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Assessment
-            </Link>
-            <Link
-              to="/stress-management"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Stress Management
-            </Link>
-            <Link
-              to="/mood-tracker"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Mood Tracker
-            </Link>
-            <Link
-              to="/chatbot"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Chatbot
-            </Link>
-            <Link
-              to="/about"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              About
-            </Link>
-            <div className="pt-4 pb-3 border-t border-gray-200">
-              <div className="flex items-center px-4">
-                {isLoggedIn ? (
-                  <div className="w-full space-y-2">
-                    <p className="text-sm text-gray-700 mb-2">
-                      Welcome, {user?.name}
-                    </p>
-                    <Link
-                      to="/profile"
-                      className="block text-center bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 w-full"
-                    >
-                      Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-200 w-full"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <Link
-                    to="/login"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 w-full text-center"
-                  >
-                    Login
-                  </Link>
-                )}
+      {/* Mobile menu with smooth transition */}
+      <div className={`sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+        isMenuOpen ? 'max-h-96' : 'max-h-0'
+      }`}>
+        <div className="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-md">
+          <Link
+            to="/"
+            onClick={() => setIsMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+              isActive('/')
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-neutral-600 hover:bg-primary-50 hover:text-primary-600'
+            }`}
+          >
+            Home
+          </Link>
+          <Link
+            to="/assessment"
+            onClick={() => setIsMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+              isActive('/assessment')
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-neutral-600 hover:bg-primary-50 hover:text-primary-600'
+            }`}
+          >
+            Assessment
+          </Link>
+          <Link
+            to="/stress-management"
+            onClick={() => setIsMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+              isActive('/stress-management')
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-neutral-600 hover:bg-primary-50 hover:text-primary-600'
+            }`}
+          >
+            Stress Management
+          </Link>
+          <Link
+            to="/mood-tracker"
+            onClick={() => setIsMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+              isActive('/mood-tracker')
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-neutral-600 hover:bg-primary-50 hover:text-primary-600'
+            }`}
+          >
+            Mood Tracker
+          </Link>
+          <Link
+            to="/chatbot"
+            onClick={() => setIsMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+              isActive('/chatbot')
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-neutral-600 hover:bg-primary-50 hover:text-primary-600'
+            }`}
+          >
+            Chatbot
+          </Link>
+          <Link
+            to="/about"
+            onClick={() => setIsMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-300 ${
+              isActive('/about')
+                ? 'bg-primary-100 text-primary-700'
+                : 'text-neutral-600 hover:bg-primary-50 hover:text-primary-600'
+            }`}
+          >
+            About
+          </Link>
+          <div className="pt-4 pb-3 border-t border-primary-100">
+            {isLoggedIn ? (
+              <div className="space-y-2 px-3">
+                <p className="text-sm font-medium text-neutral-700">
+                  Welcome, {user?.name}
+                </p>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-center bg-primary-100 text-primary-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors duration-300"
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-300 w-full"
+                >
+                  Logout
+                </button>
               </div>
-            </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="block text-center bg-gradient-to-r from-primary-600 to-primary-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all duration-300 mx-3"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

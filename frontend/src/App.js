@@ -19,7 +19,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col">
+        <div className="App min-h-screen bg-gradient-to-br from-primary-50 via-accent-50 to-support-50 flex flex-col">
           <Navbar />
           <main className="flex-grow">
             <Routes>

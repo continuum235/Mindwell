@@ -55,26 +55,26 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-50 via-accent-50 to-support-50">
       <div className="max-w-md mx-auto">
-        <div className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+        <div className="bg-white shadow-lg rounded-2xl px-8 pt-6 pb-8 mb-4 border border-primary-100">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">User Profile</h2>
           
           {error && (
-            <div className="mb-4 rounded-md bg-red-50 p-4">
+            <div className="mb-4 rounded-lg bg-red-50 p-4 border border-red-200">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="mb-4 rounded-md bg-green-50 p-4">
+            <div className="mb-4 rounded-lg bg-green-50 p-4 border border-green-200">
               <p className="text-sm text-green-800">{success}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+              <label className="block text-neutral-700 text-sm font-bold mb-2" htmlFor="name">
                 Name
               </label>
               <input
@@ -82,13 +82,13 @@ const Profile = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="shadow appearance-none border border-primary-200 rounded-lg w-full py-2 px-3 text-neutral-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              <label className="block text-neutral-700 text-sm font-bold mb-2" htmlFor="email">
                 Email
               </label>
               <input
@@ -96,13 +96,13 @@ const Profile = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="shadow appearance-none border border-primary-200 rounded-lg w-full py-2 px-3 text-neutral-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              <label className="block text-neutral-700 text-sm font-bold mb-2" htmlFor="password">
                 New Password (leave blank to keep current)
               </label>
               <input
@@ -110,14 +110,13 @@ const Profile = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="shadow appearance-none border border-primary-200 rounded-lg w-full py-2 px-3 text-neutral-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter new password"
               />
             </div>
 
-            {password && (
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="confirmPassword">
+                <label className="block text-neutral-700 text-sm font-bold mb-2" htmlFor="confirmPassword">
                   Confirm New Password
                 </label>
                 <input
@@ -125,18 +124,17 @@ const Profile = () => {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="shadow appearance-none border border-primary-200 rounded-lg w-full py-2 px-3 text-neutral-700 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Confirm new password"
                   required
                 />
               </div>
-            )}
 
             <div className="flex items-center justify-between">
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:bg-indigo-400 disabled:cursor-not-allowed w-full"
+                className="bg-gradient-to-r from-primary-600 to-primary-500 hover:shadow-lg hover:shadow-primary-500/30 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-primary-400 disabled:cursor-not-allowed w-full transition-all duration-300"
               >
                 {loading ? 'Updating...' : 'Update Profile'}
               </button>

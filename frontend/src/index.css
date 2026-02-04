@@ -1,7 +1,8 @@
-/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 body {
   margin: 0;
@@ -17,6 +18,36 @@ code {
     monospace;
 }
 
+/* Smooth scrolling */
+@layer base {
+  * {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply text-neutral-900 antialiased;
+  }
+}
+
+/* Custom scrollbar */
+@layer base {
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-100;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-500 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-600;
+  }
+}
+
 /* Custom scrollbar for chat */
 .chat-container::-webkit-scrollbar {
   width: 6px;
@@ -27,10 +58,52 @@ code {
 }
 
 .chat-container::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
+  background: #14b8a6;
   border-radius: 3px;
 }
 
 .chat-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #0d9488;
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-neutral-900/80 backdrop-blur-md border border-white/10;
+  }
+}
+
+/* Focus visible improvements */
+@layer base {
+  *:focus-visible {
+    @apply outline-2 outline-primary-500 outline-offset-2 rounded;
+  }
+  
+  button:focus-visible {
+    @apply outline-2 outline-primary-500 outline-offset-2 shadow-[0_0_0_4px_rgba(20,184,166,0.2)];
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .animate-breathe,
+  .animate-gentle-bounce {
+    animation: none !important;
+  }
 }
