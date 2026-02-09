@@ -21,19 +21,25 @@ await connectDB();
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
 
-      // Allow localhost
+      // Allow localhost for development
       if (origin.startsWith('http://localhost')) {
         return callback(null, true);
       }
 
-      // Allow all Vercel preview + prod deployments
+      // Allow all Vercel deployments (preview + production)
       if (origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
 
-      // Allow explicit prod URL from env
+      // Allow Render deployments
+      if (origin.endsWith('.onrender.com')) {
+        return callback(null, true);
+      }
+
+      // Allow explicit CLIENT_URL from environment
       if (origin === process.env.CLIENT_URL) {
         return callback(null, true);
       }
@@ -41,23 +47,8 @@ app.use(
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-  })
-);
-
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or Postman)
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
