@@ -18,12 +18,32 @@ const app = express();
 await connectDB();
 
 // CORS configuration - Allow multiple origins for development and production
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://mindwell-liard.vercel.app',
-  process.env.CLIENT_URL
-].filter(Boolean);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      // Allow localhost
+      if (origin.startsWith('http://localhost')) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel preview + prod deployments
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+
+      // Allow explicit prod URL from env
+      if (origin === process.env.CLIENT_URL) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
+
 
 app.use(
   cors({
