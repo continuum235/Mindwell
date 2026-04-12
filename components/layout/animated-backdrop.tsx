@@ -13,8 +13,8 @@ export default function AnimatedBackdrop() {
         filter: 'blur(120px)',
         pointerEvents: 'none',
       }}
-      animate={{ scale: [1, 1.05, 1] }}
-      transition={{ duration: 10, ease: 'easeInOut', repeat: Infinity }}
+      animate={{ scale: [1, 1.025, 1] }}
+      transition={{ duration: 6.5, ease: 'easeInOut', repeat: Infinity }}
     />
   )
 }

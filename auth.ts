@@ -3,13 +3,35 @@ import Credentials from 'next-auth/providers/credentials'
 import { getLoginUser } from '@/lib/store'
 import { findUserByEmail } from '@/lib/registered-users'
 
+function isStaleSessionSecretError(error: Error) {
+  const authError = error as Error & {
+    type?: string
+    cause?: { err?: Error }
+  }
+
+  return (
+    authError.type === 'JWTSessionError' &&
+    authError.cause?.err?.message.includes('no matching decryption secret') === true
+  )
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   session: {
     strategy: 'jwt',
   },
   trustHost: true,
   pages: {
     signIn: '/login',
+  },
+  logger: {
+    error(error) {
+      if (isStaleSessionSecretError(error)) {
+        return
+      }
+
+      console.error(error)
+    },
   },
   providers: [
     Credentials({
@@ -28,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         // Check registered users first
-        const registeredUser = findUserByEmail(email)
+        const registeredUser = await findUserByEmail(email)
         if (registeredUser && registeredUser.password === password) {
           return {
             id: registeredUser.id,

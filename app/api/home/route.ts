@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ensureApiSession } from '@/lib/session'
+import { ensureApiSession, getOptionalSession } from '@/lib/session'
 import { getHomeSnapshot } from '@/lib/store'
 
 export async function GET() {
@@ -9,5 +9,6 @@ export async function GET() {
     return unauthorized
   }
 
-  return NextResponse.json(await getHomeSnapshot())
+  const session = await getOptionalSession()
+  return NextResponse.json(await getHomeSnapshot(session?.user?.email ?? undefined))
 }

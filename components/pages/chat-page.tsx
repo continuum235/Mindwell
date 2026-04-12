@@ -23,6 +23,46 @@ const fallbackMessages: ChatMessage[] = [
     text: 'Thank you for noticing that. Would you like a short grounding cue?',
     createdAt: '2026-04-11T09:02:00.000Z',
   },
+  {
+    sender: 'user',
+    text: 'Yes, please. That would help.',
+    createdAt: '2026-04-11T09:03:00.000Z',
+  },
+  {
+    sender: 'companion',
+    text: 'Let\'s try the 5-4-3-2-1 technique. Name 5 things you can see around you right now.',
+    createdAt: '2026-04-11T09:04:00.000Z',
+  },
+  {
+    sender: 'user',
+    text: 'I see my desk, a lamp, a plant, my phone, and the window.',
+    createdAt: '2026-04-11T09:05:00.000Z',
+  },
+  {
+    sender: 'companion',
+    text: 'Great! Now name 4 things you can physically feel or touch.',
+    createdAt: '2026-04-11T09:06:00.000Z',
+  },
+  {
+    sender: 'user',
+    text: 'The chair beneath me, my feet on the floor, the breeze from the window, and my hands on the desk.',
+    createdAt: '2026-04-11T09:07:00.000Z',
+  },
+  {
+    sender: 'companion',
+    text: 'Wonderful progress. How are you feeling now? Has the tightness eased a bit?',
+    createdAt: '2026-04-11T09:08:00.000Z',
+  },
+  {
+    sender: 'user',
+    text: 'Yes, actually. I feel a bit calmer now.',
+    createdAt: '2026-04-11T09:09:00.000Z',
+  },
+  {
+    sender: 'companion',
+    text: 'I\'m glad to hear that. Remember, you can use this technique anytime you need to ground yourself. What would help you most right now?',
+    createdAt: '2026-04-11T09:10:00.000Z',
+  },
 ]
 
 export default function ChatPage() {

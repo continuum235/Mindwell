@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { auth } from '@/auth'
 import AuthProvider from '@/components/auth/auth-provider'
 import AppShell from '@/components/layout/app-shell'
+import { getOptionalSession } from '@/lib/session'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth()
+  const session = await getOptionalSession()
 
   return (
     <html lang="en">

@@ -92,8 +92,8 @@ export default function MoodPage() {
         </motion.p>
         <motion.h1 variants={itemVariants}>Notice your rhythm.</motion.h1>
         <motion.p variants={itemVariants}>
-          A soft calendar of how you have been feeling. Each day holds a watercolor tone instead
-          of a score.
+          Track one word that describes how you felt each day. A soft calendar of your emotional
+          patterns, using watercolor tones instead of numeric scores.
         </motion.p>
         <motion.div className="mood-calendar" variants={itemVariants}>
           {Array.from({ length: 30 }, (_, index) => {
@@ -103,10 +103,14 @@ export default function MoodPage() {
             return (
               <div
                 key={`day-${day}`}
-                className={`mood-day ${entry?.tone || moodClasses[index % moodClasses.length]}`}
+                className={`mood-day ${entry?.tone || moodClasses[index % moodClasses.length]} ${entry ? 'tracked' : ''}`}
+                title={entry ? `Day ${day}: ${entry.label}` : `Day ${day}`}
               >
                 <span>Day {day}</span>
-                <span>{entry ? entry.label.slice(0, 1) : '+'}</span>
+                <div className="mood-display">
+                  <span className="mood-indicator">{entry ? '✓' : '+'}</span>
+                  {entry && <span className="mood-emotion">{entry.label}</span>}
+                </div>
               </div>
             )
           })}

@@ -8,18 +8,21 @@ import { fetchJson } from '@/lib/fetcher'
 import type { AssessmentState } from '@/types/app'
 
 const fallbackAssessment: AssessmentState = {
-  questionNumber: 2,
-  totalQuestions: 6,
-  question: 'How does your energy feel right now?',
-  description: 'Choose the option that feels most true in your body, not just your mind.',
+  currentQuestionIndex: 0,
+  questionNumber: 1,
+  totalQuestions: 5,
+  question: 'How often have you felt little interest or pleasure in doing things?',
+  description: 'Choose the response that best matches the last two weeks.',
   options: [
-    'Very low and heavy',
-    'Low but steady',
-    'Neutral and present',
-    'Elevated and active',
-    'Overwhelmed or scattered',
+    'Not at all',
+    'Several days',
+    'More than half the days',
+    'Nearly every day',
   ],
   lastAnswer: null,
+  answers: [],
+  completed: false,
+  resultMessage: null,
 }
 
 export default function AssessmentPage() {
@@ -54,6 +57,15 @@ export default function AssessmentPage() {
     const data = await fetchJson<AssessmentState>('/api/assessment', {
       method: 'POST',
       body: JSON.stringify({ answer: option }),
+    })
+
+    setAssessment(data)
+  }
+
+  async function handleAction(action: 'back' | 'continue' | 'reset') {
+    const data = await fetchJson<AssessmentState>('/api/assessment', {
+      method: 'PATCH',
+      body: JSON.stringify({ action }),
     })
 
     setAssessment(data)
@@ -105,40 +117,65 @@ export default function AssessmentPage() {
               <div
                 className="progress-fill"
                 style={{
-                  width: `${(assessment.questionNumber / assessment.totalQuestions) * 100}%`,
+                  width: `${(assessment.answers.length / assessment.totalQuestions) * 100}%`,
                 }}
               />
             </div>
             <p className="eyebrow">
-              Question {assessment.questionNumber} of {assessment.totalQuestions}
+              {assessment.completed
+                ? 'Assessment complete'
+                : `Question ${assessment.questionNumber} of ${assessment.totalQuestions}`}
             </p>
           </motion.div>
           <motion.div variants={itemVariants}>
-            <h1>{assessment.question}</h1>
-            <p>{assessment.description}</p>
+            <h1>{assessment.completed ? 'Your reflection summary' : assessment.question}</h1>
+            <p>{assessment.completed ? assessment.resultMessage : assessment.description}</p>
           </motion.div>
-          <motion.div className="option-grid" variants={gridVariants}>
-            {assessment.options.map((option) => (
-              <motion.button
-                key={option}
-                className="option-pill"
-                type="button"
-                variants={itemVariants}
-                onClick={() => handleSelect(option)}
-              >
-                {option}
-                <span>{assessment.lastAnswer === option ? '•' : '+'}</span>
-              </motion.button>
-            ))}
-          </motion.div>
+          {assessment.completed ? (
+            <motion.div className="card" variants={itemVariants}>
+              <p className="eyebrow">Responses captured</p>
+              <p>{assessment.answers.join(' • ')}</p>
+            </motion.div>
+          ) : (
+            <motion.div className="option-grid" variants={gridVariants}>
+              {assessment.options.map((option) => (
+                <motion.button
+                  key={option}
+                  className="option-pill"
+                  type="button"
+                  variants={itemVariants}
+                  onClick={() => handleSelect(option)}
+                >
+                  {option}
+                  <span>{assessment.lastAnswer === option ? '•' : '+'}</span>
+                </motion.button>
+              ))}
+            </motion.div>
+          )}
           <motion.div className="hero-actions" variants={itemVariants}>
-            <button className="btn btn-outline" type="button">
-              Back
+            <button
+              className="btn btn-outline"
+              type="button"
+              disabled={!assessment.completed && assessment.currentQuestionIndex === 0}
+              onClick={() => void handleAction(assessment.completed ? 'reset' : 'back')}
+            >
+              {assessment.completed ? 'Retake' : 'Back'}
             </button>
-            <button className="btn btn-primary" type="button">
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={assessment.completed || !assessment.lastAnswer}
+              onClick={() => void handleAction('continue')}
+            >
               Continue
             </button>
           </motion.div>
+          {assessment.completed ? (
+            <motion.p className="eyebrow" variants={itemVariants}>
+              This reflection is not a diagnosis. Reach out to a qualified professional if you need
+              more support.
+            </motion.p>
+          ) : null}
         </motion.div>
       </motion.div>
     </section>

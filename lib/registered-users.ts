@@ -1,5 +1,6 @@
-// Shared registered users storage
-// In production, this would be a database
+import { randomUUID } from 'node:crypto'
+import { getDb } from '@/lib/mongodb'
+
 interface RegisteredUser {
   id: string
   name: string
@@ -7,21 +8,45 @@ interface RegisteredUser {
   password: string
 }
 
-let registeredUsers: RegisteredUser[] = []
+const memoryUsers = new Map<string, RegisteredUser>()
 
-export function getRegisteredUsers(): RegisteredUser[] {
-  return registeredUsers
+function normalizeEmail(email: string) {
+  return email.toLowerCase().trim()
 }
 
-export function addRegisteredUser(user: RegisteredUser): void {
-  registeredUsers.push(user)
+export async function findUserByEmail(email: string): Promise<RegisteredUser | null> {
+  const normalizedEmail = normalizeEmail(email)
+  const db = await getDb()
+
+  if (!db) {
+    return memoryUsers.get(normalizedEmail) ?? null
+  }
+
+  const collection = db.collection<RegisteredUser>('registered_users')
+  return (await collection.findOne({ email: normalizedEmail })) ?? null
 }
 
-export function findUserByEmail(email: string): RegisteredUser | undefined {
-  const normalizedEmail = email.toLowerCase().trim()
-  return registeredUsers.find((u) => u.email === normalizedEmail)
-}
+export async function createRegisteredUser(input: {
+  name: string
+  email: string
+  password: string
+}): Promise<RegisteredUser> {
+  const user: RegisteredUser = {
+    id: randomUUID(),
+    name: input.name.trim(),
+    email: normalizeEmail(input.email),
+    password: input.password,
+  }
 
-export function clearRegisteredUsers(): void {
-  registeredUsers = []
+  const db = await getDb()
+
+  if (!db) {
+    memoryUsers.set(user.email, user)
+    return user
+  }
+
+  const collection = db.collection<RegisteredUser>('registered_users')
+  await collection.createIndex({ email: 1 }, { unique: true })
+  await collection.insertOne(user)
+  return user
 }

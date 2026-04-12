@@ -37,12 +37,16 @@ export interface ProfileSettings {
 }
 
 export interface AssessmentState {
+  currentQuestionIndex: number
   questionNumber: number
   totalQuestions: number
   question: string
   description: string
   options: string[]
   lastAnswer: string | null
+  answers: string[]
+  completed: boolean
+  resultMessage: string | null
 }
 
 export interface LoginUser {

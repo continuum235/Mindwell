@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { findUserByEmail, addRegisteredUser } from '@/lib/registered-users'
+import { createRegisteredUser, findUserByEmail } from '@/lib/registered-users'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,20 +22,16 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim()
 
     // Check if user already exists
-    const existingUser = findUserByEmail(normalizedEmail)
+    const existingUser = await findUserByEmail(normalizedEmail)
     if (existingUser) {
       return NextResponse.json({ message: 'Email already in use' }, { status: 400 })
     }
 
-    // Create user (store plaintext for now - in production use proper hashing)
-    const newUser = {
-      id: Math.random().toString(36).substring(7),
-      name: name.trim(),
+    const newUser = await createRegisteredUser({
+      name,
       email: normalizedEmail,
-      password: password,
-    }
-
-    addRegisteredUser(newUser)
+      password,
+    })
 
     return NextResponse.json(
       {

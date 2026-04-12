@@ -190,9 +190,9 @@ export default function HomePage() {
                 src={snapshot.suggestedResource.image}
                 alt="Soft botanical light in a calm interior"
                 className="h-48 w-full object-cover rounded-md"
-                initial={{ filter: 'blur(10px)', opacity: 0 }}
+                initial={{ filter: 'blur(6px)', opacity: 0 }}
                 animate={{ filter: 'blur(0px)', opacity: 1 }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               />
             </p>
             <div className="chip-row">
