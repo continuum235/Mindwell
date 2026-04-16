@@ -6,6 +6,6 @@ export async function GET() {
   const { session, response } = await ensureApiSession()
   if (response) return response
 
-  const resources = await getResources(session?.user?.email ?? undefined)
+  const resources = await getResources()
   return NextResponse.json(resources)
 }

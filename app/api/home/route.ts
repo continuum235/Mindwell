@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ensureApiSession, getOptionalSession } from '@/lib/session'
+import { ensureApiSession } from '@/lib/session'
 import { getHomeSnapshot } from '@/lib/store'
 
 export async function GET() {

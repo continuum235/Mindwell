@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ensureApiSession, getOptionalSession } from '@/lib/session'
+import { ensureApiSession } from '@/lib/session'
 import { getAssessment, moveAssessment, saveAssessmentAnswer } from '@/lib/store'
 
 export async function GET() {
@@ -21,14 +21,10 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(await saveAssessmentAnswer(body.answer, session?.user?.email ?? undefined))
 }
 
-export async function PATCH(request: NextRequest) {
-  const unauthorized = await ensureApiSession()
+export async function PATCH(request: NextRequest): Promise<Response> {
+  const { session, response } = await ensureApiSession()
+  if (response) return response
 
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
   const body = (await request.json()) as { action?: 'back' | 'continue' | 'reset' }
 
   if (!body.action) {

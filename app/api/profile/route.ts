@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ensureApiSession, getOptionalSession } from '@/lib/session'
+import { ensureApiSession } from '@/lib/session'
 import { getProfileSettings, updateProfileSettings } from '@/lib/store'
 
 export async function GET() {
@@ -8,14 +8,9 @@ export async function GET() {
   return NextResponse.json(await getProfileSettings(session?.user?.email ?? undefined))
 }
 
-export async function PATCH(request: NextRequest) {
-  const unauthorized = await ensureApiSession()
-
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
+export async function PATCH(request: NextRequest): Promise<Response> {
+  const { session, response } = await ensureApiSession()
+  if (response) return response
 
   const body = (await request.json()) as {
     dailyReminder?: boolean
