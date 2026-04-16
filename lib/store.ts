@@ -94,6 +94,12 @@ async function writeStateToDb(db: Db, state: AppState) {
   await collection.replaceOne({ key: STATE_ID }, { key: STATE_ID, ...state }, { upsert: true })
 }
 
+import { cache } from 'react'
+
+const getCachedState = cache(async (db: Db) => {
+  return readStateFromDb(db)
+})
+
 async function readState() {
   const db = await getDb()
 
@@ -101,7 +107,8 @@ async function readState() {
     return cloneValue(memoryState)
   }
 
-  return readStateFromDb(db)
+  // Use React cache for request-scoped deduplication
+  return getCachedState(db)
 }
 
 async function writeState(state: AppState) {
@@ -267,6 +274,23 @@ async function writeAssessmentProgress(progress: StoredAssessmentProgress, email
 }
 
 export async function getHomeSnapshot(userEmail?: string): Promise<HomeSnapshot> {
+  // If no user email, we can read the entire state once
+  if (!userEmail) {
+    const state = await readState()
+    const latestJournal = state.journalEntries[0]
+    return {
+      careStreak: calculateCareStreak(state.moods),
+      breathwork: '5 minutes',
+      recentNote: formatShortDate(latestJournal?.date || '2026-04-10'),
+      latestJournal: latestJournal || {
+        date: 'April 10, 2026',
+        note: 'Let yourself arrive exactly as you are.',
+      },
+      suggestedResource: state.resources[0],
+    }
+  }
+
+  // For logged in users, fetch in parallel (already good, but ensure individual functions are optimized)
   const [journals, moods, resources] = await Promise.all([
     getJournalEntries(userEmail),
     getMoods(userEmail),
@@ -278,11 +302,10 @@ export async function getHomeSnapshot(userEmail?: string): Promise<HomeSnapshot>
     careStreak: calculateCareStreak(moods),
     breathwork: '5 minutes',
     recentNote: formatShortDate(latestJournal?.date || '2026-04-10'),
-    latestJournal:
-      latestJournal || {
-        date: 'April 10, 2026',
-        note: 'Let yourself arrive exactly as you are.',
-      },
+    latestJournal: latestJournal || {
+      date: 'April 10, 2026',
+      note: 'Let yourself arrive exactly as you are.',
+    },
     suggestedResource: resources[0],
   }
 }

@@ -3,11 +3,9 @@ import { ensureApiSession } from '@/lib/session'
 import { getResources } from '@/lib/store'
 
 export async function GET() {
-  const unauthorized = await ensureApiSession()
+  const { session, response } = await ensureApiSession()
+  if (response) return response
 
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  return NextResponse.json(await getResources())
+  const resources = await getResources(session?.user?.email ?? undefined)
+  return NextResponse.json(resources)
 }

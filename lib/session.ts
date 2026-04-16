@@ -52,8 +52,8 @@ export async function ensureApiSession() {
   const session = await getOptionalSession()
 
   if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return { session: null, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
 
-  return null
+  return { session, response: null }
 }

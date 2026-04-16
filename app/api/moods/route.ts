@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ensureApiSession, getOptionalSession } from '@/lib/session'
+import { ensureApiSession } from '@/lib/session'
 import { getMoods, saveMood } from '@/lib/store'
 
 export async function GET() {
-  const unauthorized = await ensureApiSession()
-
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
+  const { session, response } = await ensureApiSession()
+  if (response) return response
   return NextResponse.json(await getMoods(session?.user?.email ?? undefined))
 }
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await ensureApiSession()
-
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
+  const { session, response } = await ensureApiSession()
+  if (response) return response
 
   const body = (await request.json()) as { label?: string }
 

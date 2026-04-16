@@ -11,13 +11,21 @@ export async function getDb() {
     return null
   }
 
-  const clientPromise =
-    global.mongoClientPromise ??
-    new MongoClient(uri).connect()
+  try {
+    const clientPromise =
+      global.mongoClientPromise ??
+      new MongoClient(uri, {
+        connectTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 5000,
+      }).connect()
 
-  global.mongoClientPromise = clientPromise
+    global.mongoClientPromise = clientPromise
 
-  const client = await clientPromise
-
-  return client.db(process.env.MONGODB_DB || 'mindwell')
+    const client = await clientPromise
+    return client.db(process.env.MONGODB_DB || 'mindwell')
+  } catch (error) {
+    console.warn('MongoDB connection failed, falling back to memory store:', error instanceof Error ? error.message : error)
+    global.mongoClientPromise = undefined
+    return null
+  }
 }

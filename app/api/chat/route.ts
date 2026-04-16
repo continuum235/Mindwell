@@ -4,26 +4,24 @@ import { ensureApiSession, getOptionalSession } from '@/lib/session'
 import { getChatMessages, saveChatExchange } from '@/lib/store'
 
 export async function GET() {
-  const unauthorized = await ensureApiSession()
+  const { session, response } = await ensureApiSession()
 
-  if (unauthorized) {
-    return unauthorized
+  if (response) {
+    return response
   }
 
-  const session = await getOptionalSession()
   const userEmail = session?.user?.email
 
   return NextResponse.json(await getChatMessages(userEmail ?? undefined))
 }
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await ensureApiSession()
+  const { session, response } = await ensureApiSession()
 
-  if (unauthorized) {
-    return unauthorized
+  if (response) {
+    return response
   }
 
-  const session = await getOptionalSession()
   const userEmail = session?.user?.email
 
   const body = (await request.json()) as { text?: string }

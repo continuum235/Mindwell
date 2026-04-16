@@ -3,24 +3,14 @@ import { ensureApiSession, getOptionalSession } from '@/lib/session'
 import { getAssessment, moveAssessment, saveAssessmentAnswer } from '@/lib/store'
 
 export async function GET() {
-  const unauthorized = await ensureApiSession()
-
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
+  const { session, response } = await ensureApiSession()
+  if (response) return response
   return NextResponse.json(await getAssessment(session?.user?.email ?? undefined))
 }
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await ensureApiSession()
-
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
+  const { session, response } = await ensureApiSession()
+  if (response) return response
 
   const body = (await request.json()) as { answer?: string }
 

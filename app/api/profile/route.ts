@@ -3,13 +3,8 @@ import { ensureApiSession, getOptionalSession } from '@/lib/session'
 import { getProfileSettings, updateProfileSettings } from '@/lib/store'
 
 export async function GET() {
-  const unauthorized = await ensureApiSession()
-
-  if (unauthorized) {
-    return unauthorized
-  }
-
-  const session = await getOptionalSession()
+  const { session, response } = await ensureApiSession()
+  if (response) return response
   return NextResponse.json(await getProfileSettings(session?.user?.email ?? undefined))
 }
 

@@ -1,7 +1,8 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { getLoginUser } from '@/lib/store'
-import { findUserByEmail } from '@/lib/registered-users'
+import { findUserByEmail, verifyUserPassword } from '@/lib/registered-users'
+import { authConfig } from './auth.config'
 
 function isStaleSessionSecretError(error: Error) {
   const authError = error as Error & {
@@ -16,23 +17,8 @@ function isStaleSessionSecretError(error: Error) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   secret: process.env.AUTH_SECRET,
-  session: {
-    strategy: 'jwt',
-  },
-  trustHost: true,
-  pages: {
-    signIn: '/login',
-  },
-  logger: {
-    error(error) {
-      if (isStaleSessionSecretError(error)) {
-        return
-      }
-
-      console.error(error)
-    },
-  },
   providers: [
     Credentials({
       credentials: {
@@ -51,7 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Check registered users first
         const registeredUser = await findUserByEmail(email)
-        if (registeredUser && registeredUser.password === password) {
+        if (registeredUser && await verifyUserPassword(registeredUser, password)) {
           return {
             id: registeredUser.id,
             email: registeredUser.email,
@@ -75,22 +61,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.email = user.email
-        token.name = user.name
-      }
-
-      return token
-    },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.email = typeof token.email === 'string' ? token.email : ''
-        session.user.name = typeof token.name === 'string' ? token.name : session.user.name
-      }
-
-      return session
-    },
-  },
 })
