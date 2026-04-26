@@ -40,7 +40,6 @@ export async function generateCompanionReply(messages: ChatMessage[], latestUser
       max_tokens: 300,
       messages: toGroqMessages(messages, latestUserText),
     }),
-    cache: 'no-store',
   })
 
   if (!response.ok) {

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { Skeleton } from 'boneyard-js/react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { fetchJson } from '@/lib/fetcher'
@@ -110,70 +111,43 @@ export default function ChatPage() {
     setInput('')
   }
 
-  if (isLoading) {
-    return (
-      <section className="page">
-        <AnimatedBackdrop />
-        <div className="container" aria-busy="true" aria-live="polite">
-          <div className="skeleton skeleton-eyebrow" />
-          <div className="skeleton skeleton-title" />
-          <div className="chat-shell">
-            <div className="chat-thread">
-              <div className="message-row">
-                <div className="skeleton skeleton-bubble" />
-              </div>
-              <div className="message-row">
-                <div className="skeleton skeleton-bubble skeleton-bubble-short" />
-              </div>
-              <div className="message-row">
-                <div className="skeleton skeleton-bubble" />
-              </div>
-            </div>
-            <div className="chat-input">
-              <div className="skeleton skeleton-input" />
-              <div className="skeleton skeleton-button" />
-            </div>
-          </div>
-        </div>
-      </section>
-    )
-  }
-
   return (
     <section className="page">
       <AnimatedBackdrop />
-      <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
-        <motion.p className="eyebrow" variants={itemVariants}>
-          Mindful companion
-        </motion.p>
-        <motion.h1 variants={itemVariants}>A calm conversation, held gently.</motion.h1>
-        <motion.div className="chat-shell" variants={itemVariants}>
-          <div className="chat-thread">
-            {messages.map((message, index) => (
-              <div className="message-row" key={`${message.sender}-${message.createdAt}-${index}`}>
-                <div className={`message ${message.sender}`}>{message.text}</div>
-              </div>
-            ))}
-          </div>
-          <div className="chat-input">
-            <input
-              type="text"
-              placeholder="Share what you are feeling..."
-              aria-label="Message input"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  void handleSend()
-                }
-              }}
-            />
-            <button className="btn btn-primary" type="button" onClick={() => void handleSend()}>
-              Send
-            </button>
-          </div>
+      <Skeleton name="chat-page" loading={isLoading}>
+        <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
+          <motion.p className="eyebrow" variants={itemVariants}>
+            Mindful companion
+          </motion.p>
+          <motion.h1 variants={itemVariants}>A calm conversation, held gently.</motion.h1>
+          <motion.div className="chat-shell" variants={itemVariants}>
+            <div className="chat-thread">
+              {messages.map((message, index) => (
+                <div className="message-row" key={`${message.sender}-${message.createdAt}-${index}`}>
+                  <div className={`message ${message.sender}`}>{message.text}</div>
+                </div>
+              ))}
+            </div>
+            <div className="chat-input">
+              <input
+                type="text"
+                placeholder="Share what you are feeling..."
+                aria-label="Message input"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    void handleSend()
+                  }
+                }}
+              />
+              <button className="btn btn-primary" type="button" onClick={() => void handleSend()}>
+                Send
+              </button>
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </Skeleton>
     </section>
   )
 }

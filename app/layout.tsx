@@ -4,6 +4,9 @@ import AppShell from '@/components/layout/app-shell'
 import { getOptionalSession } from '@/lib/session'
 import './globals.css'
 
+// Import bones registry (run `npx boneyard-js build` to generate bones first)
+// import './bones/registry'
+
 export const metadata: Metadata = {
   title: 'Mindwell',
   description: 'A private, compassionate space for daily reflection and somatic care.',
