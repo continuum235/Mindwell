@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-import { Skeleton } from 'boneyard-js/react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { fetchJson } from '@/lib/fetcher'
@@ -35,10 +34,7 @@ export default function MoodPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<MoodEntry[]>('/api/moods').catch(() => []),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<MoodEntry[]>('/api/moods').catch(() => [])
 
       if (!active) return
 
@@ -82,110 +78,140 @@ export default function MoodPage() {
   const entryByDay = new Map(entries.map((entry) => [entry.day, entry]))
   const todayEntry = entryByDay.get(today)
 
+  if (isLoading) {
+    return (
+      <section className="page">
+        <AnimatedBackdrop />
+        <div className="container" aria-busy="true" aria-live="polite">
+          <div className="skeleton skeleton-eyebrow" />
+          <div className="skeleton skeleton-title" />
+          <div className="skeleton skeleton-line" />
+          <div className="mood-calendar">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div className="skeleton skeleton-day" key={`mood-day-${index}`} />
+            ))}
+          </div>
+          <div className="mood-actions">
+            <div className="skeleton skeleton-title" />
+            <div className="mood-options">
+              {moodOptions.map((option) => (
+                <div className="skeleton skeleton-pill" key={`mood-option-${option.label}`} />
+              ))}
+            </div>
+            <div className="mood-custom-form">
+              <div className="mood-custom-field">
+                <div className="skeleton skeleton-input" />
+                <div className="skeleton skeleton-button" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="page">
       <AnimatedBackdrop />
-      <Skeleton name="mood-page" loading={isLoading}>
-        <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
-          <motion.p className="eyebrow" variants={itemVariants}>Mood tracker</motion.p>
-          <motion.h1 variants={itemVariants}>Notice your rhythm.</motion.h1>
-          <motion.p variants={itemVariants}>
-            In one word — how are you today? Choose a preset or type your own. Your word will mark today on the calendar.
-          </motion.p>
+      <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
+        <motion.p className="eyebrow" variants={itemVariants}>Mood tracker</motion.p>
+        <motion.h1 variants={itemVariants}>Notice your rhythm.</motion.h1>
+        <motion.p variants={itemVariants}>
+          In one word — how are you today? Choose a preset or type your own. Your word will mark today on the calendar.
+        </motion.p>
 
-          <motion.div className="mood-calendar" variants={itemVariants}>
-            {Array.from({ length: 30 }, (_, index) => {
-              const day = index + 1
-              const entry = entryByDay.get(day)
-              const isToday = day === today
+        <motion.div className="mood-calendar" variants={itemVariants}>
+          {Array.from({ length: 30 }, (_, index) => {
+            const day = index + 1
+            const entry = entryByDay.get(day)
+            const isToday = day === today
 
-              return (
-                <div
-                  key={`day-${day}`}
-                  className={[
-                    'mood-day',
-                    entry?.tone || moodClasses[index % moodClasses.length],
-                    entry ? 'tracked' : '',
-                    isToday ? 'mood-day-today' : '',
-                  ].filter(Boolean).join(' ')}
-                  title={entry ? `Day ${day}: ${entry.label}` : isToday ? 'Today' : `Day ${day}`}
-                >
-                  <span>{isToday ? '✦' : `Day ${day}`}</span>
-                  <div className="mood-display">
-                    <span className="mood-indicator">{entry ? '✓' : isToday ? '·' : '+'}</span>
-                    {entry && <span className="mood-emotion">{entry.label}</span>}
-                  </div>
+            return (
+              <div
+                key={`day-${day}`}
+                className={[
+                  'mood-day',
+                  entry?.tone || moodClasses[index % moodClasses.length],
+                  entry ? 'tracked' : '',
+                  isToday ? 'mood-day-today' : '',
+                ].filter(Boolean).join(' ')}
+                title={entry ? `Day ${day}: ${entry.label}` : isToday ? 'Today' : `Day ${day}`}
+              >
+                <span>{isToday ? '✦' : `Day ${day}`}</span>
+                <div className="mood-display">
+                  <span className="mood-indicator">{entry ? '✓' : isToday ? '·' : '+'}</span>
+                  {entry && <span className="mood-emotion">{entry.label}</span>}
                 </div>
-              )
-            })}
-          </motion.div>
-
-          <motion.div className="mood-today-status" variants={itemVariants}>
-            <AnimatePresence mode="wait">
-              {saved ? (
-                <motion.p
-                  key="saved"
-                  className="mood-saved-msg"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                >
-                  ✓ Today marked — Day {today}
-                </motion.p>
-              ) : todayEntry ? (
-                <motion.p key="existing" className="mood-saved-msg" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  Today&apos;s mood: <strong>{todayEntry.label}</strong> — tap a new word to update it.
-                </motion.p>
-              ) : null}
-            </AnimatePresence>
-          </motion.div>
-
-          <motion.div className="mood-actions" variants={itemVariants}>
-            <h2>How are you right now?</h2>
-
-            <div className="mood-options">
-              {moodOptions.map((option) => (
-                <button
-                  key={option.label}
-                  className={`mood-pill ${todayEntry?.label === option.label ? 'mood-pill-active' : ''}`}
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => void handleSelectMood(option.label)}
-                >
-                  <span className="mood-dot" style={{ background: option.tone }} />
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <form className="mood-custom-form" onSubmit={handleCustomSubmit}>
-              <div className="mood-custom-field">
-                <input
-                  ref={inputRef}
-                  id="customMoodInput"
-                  type="text"
-                  className="mood-custom-input"
-                  placeholder="or type your own word…"
-                  value={customMood}
-                  maxLength={24}
-                  disabled={isSaving}
-                  onChange={(e) => {
-                    setCustomMood(e.target.value)
-                  }}
-                />
-                <button
-                  className="btn btn-primary mood-custom-btn"
-                  type="submit"
-                  disabled={isSaving || !customMood.trim()}
-                >
-                  {isSaving ? '…' : 'Mark today'}
-                </button>
               </div>
-              <p className="mood-custom-hint">Only the first word will be saved.</p>
-            </form>
-          </motion.div>
+            )
+          })}
         </motion.div>
-      </Skeleton>
+
+        <motion.div className="mood-today-status" variants={itemVariants}>
+          <AnimatePresence mode="wait">
+            {saved ? (
+              <motion.p
+                key="saved"
+                className="mood-saved-msg"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                ✓ Today marked — Day {today}
+              </motion.p>
+            ) : todayEntry ? (
+              <motion.p key="existing" className="mood-saved-msg" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                Today&apos;s mood: <strong>{todayEntry.label}</strong> — tap a new word to update it.
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
+        </motion.div>
+
+        <motion.div className="mood-actions" variants={itemVariants}>
+          <h2>How are you right now?</h2>
+
+          <div className="mood-options">
+            {moodOptions.map((option) => (
+              <button
+                key={option.label}
+                className={`mood-pill ${todayEntry?.label === option.label ? 'mood-pill-active' : ''}`}
+                type="button"
+                disabled={isSaving}
+                onClick={() => void handleSelectMood(option.label)}
+              >
+                <span className="mood-dot" style={{ background: option.tone }} />
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <form className="mood-custom-form" onSubmit={handleCustomSubmit}>
+            <div className="mood-custom-field">
+              <input
+                ref={inputRef}
+                id="customMoodInput"
+                type="text"
+                className="mood-custom-input"
+                placeholder="or type your own word…"
+                value={customMood}
+                maxLength={24}
+                disabled={isSaving}
+                onChange={(e) => {
+                  setCustomMood(e.target.value)
+                }}
+              />
+              <button
+                className="btn btn-primary mood-custom-btn"
+                type="submit"
+                disabled={isSaving || !customMood.trim()}
+              >
+                {isSaving ? '…' : 'Mark today'}
+              </button>
+            </div>
+            <p className="mood-custom-hint">Only the first word will be saved.</p>
+          </form>
+        </motion.div>
+      </motion.div>
     </section>
   )
 }

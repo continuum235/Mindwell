@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { Skeleton } from 'boneyard-js/react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { fetchJson } from '@/lib/fetcher'
@@ -75,10 +74,7 @@ export default function ChatPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<ChatMessage[]>('/api/chat').catch(() => fallbackMessages),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<ChatMessage[]>('/api/chat').catch(() => fallbackMessages)
 
       if (!active) {
         return
@@ -111,43 +107,67 @@ export default function ChatPage() {
     setInput('')
   }
 
-  return (
-    <section className="page">
-      <AnimatedBackdrop />
-      <Skeleton name="chat-page" loading={isLoading}>
-        <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
-          <motion.p className="eyebrow" variants={itemVariants}>
-            Mindful companion
-          </motion.p>
-          <motion.h1 variants={itemVariants}>A calm conversation, held gently.</motion.h1>
-          <motion.div className="chat-shell" variants={itemVariants}>
+  if (isLoading) {
+    return (
+      <section className="page">
+        <AnimatedBackdrop />
+        <div className="container" aria-busy="true" aria-live="polite">
+          <div className="skeleton skeleton-eyebrow" />
+          <div className="skeleton skeleton-title" />
+          <div className="chat-shell">
             <div className="chat-thread">
-              {messages.map((message, index) => (
-                <div className="message-row" key={`${message.sender}-${message.createdAt}-${index}`}>
-                  <div className={`message ${message.sender}`}>{message.text}</div>
-                </div>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  className={`skeleton skeleton-bubble ${index % 2 === 0 ? '' : 'skeleton-bubble-short'}`}
+                  key={`chat-bubble-${index}`}
+                />
               ))}
             </div>
             <div className="chat-input">
-              <input
-                type="text"
-                placeholder="Share what you are feeling..."
-                aria-label="Message input"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    void handleSend()
-                  }
-                }}
-              />
-              <button className="btn btn-primary" type="button" onClick={() => void handleSend()}>
-                Send
-              </button>
+              <div className="skeleton skeleton-input" />
+              <div className="skeleton skeleton-button" />
             </div>
-          </motion.div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section className="page">
+      <AnimatedBackdrop />
+      <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
+        <motion.p className="eyebrow" variants={itemVariants}>
+          Mindful companion
+        </motion.p>
+        <motion.h1 variants={itemVariants}>A calm conversation, held gently.</motion.h1>
+        <motion.div className="chat-shell" variants={itemVariants}>
+          <div className="chat-thread">
+            {messages.map((message, index) => (
+              <div className="message-row" key={`${message.sender}-${message.createdAt}-${index}`}>
+                <div className={`message ${message.sender}`}>{message.text}</div>
+              </div>
+            ))}
+          </div>
+          <div className="chat-input">
+            <input
+              type="text"
+              placeholder="Share what you are feeling..."
+              aria-label="Message input"
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  void handleSend()
+                }
+              }}
+            />
+            <button className="btn btn-primary" type="button" onClick={() => void handleSend()}>
+              Send
+            </button>
+          </div>
         </motion.div>
-      </Skeleton>
+      </motion.div>
     </section>
   )
 }

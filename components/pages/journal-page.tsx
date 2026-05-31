@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { Skeleton } from 'boneyard-js/react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, gridVariants, itemVariants } from '@/lib/animations'
 import { formatLongDate } from '@/lib/date'
@@ -33,10 +32,7 @@ export default function JournalPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<JournalEntry[]>('/api/journal').catch(() => fallbackEntries),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<JournalEntry[]>('/api/journal').catch(() => fallbackEntries)
 
       if (!active) {
         return
@@ -69,45 +65,73 @@ export default function JournalPage() {
     setNote('')
   }
 
+  if (isLoading) {
+    return (
+      <section className="page">
+        <AnimatedBackdrop />
+        <div className="container" aria-busy="true" aria-live="polite">
+          <div className="skeleton skeleton-eyebrow" />
+          <div className="skeleton skeleton-title" />
+          <div className="journal-layout">
+            <div className="journal-shell">
+              <div className="journal-ui">
+                <div className="skeleton-stack">
+                  <div className="skeleton skeleton-title" />
+                  <div className="skeleton skeleton-line skeleton-short" />
+                </div>
+                <div className="skeleton skeleton-button skeleton-button-outline" />
+              </div>
+              <div className="skeleton skeleton-textarea" />
+            </div>
+            <aside className="journal-sidebar">
+              <div className="skeleton skeleton-eyebrow" />
+              <div className="skeleton skeleton-line" />
+              <div className="skeleton skeleton-line skeleton-medium" />
+              <div className="skeleton skeleton-line" />
+            </aside>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="page">
       <AnimatedBackdrop />
-      <Skeleton name="journal-page" loading={isLoading}>
-        <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
-          <motion.p className="eyebrow" variants={itemVariants}>
-            The journal
-          </motion.p>
-          <motion.h1 variants={itemVariants}>Your quiet notebook.</motion.h1>
-          <motion.div className="journal-layout" variants={gridVariants}>
-            <motion.div className="journal-shell" variants={itemVariants}>
-              <div className="journal-ui">
-                <div>
-                  <h2>Today&apos;s entry</h2>
-                  <p className="eyebrow">{formatLongDate(new Date())}</p>
-                </div>
-                <button className="btn btn-outline" type="button" onClick={handleSaveEntry}>
-                  Save entry
-                </button>
+      <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
+        <motion.p className="eyebrow" variants={itemVariants}>
+          The journal
+        </motion.p>
+        <motion.h1 variants={itemVariants}>Your quiet notebook.</motion.h1>
+        <motion.div className="journal-layout" variants={gridVariants}>
+          <motion.div className="journal-shell" variants={itemVariants}>
+            <div className="journal-ui">
+              <div>
+                <h2>Today&apos;s entry</h2>
+                <p className="eyebrow">{formatLongDate(new Date())}</p>
               </div>
-              <textarea
-                className="journal-textarea"
-                placeholder="Let the page hold what you are carrying..."
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-              />
-            </motion.div>
-            <motion.aside className="journal-sidebar" variants={itemVariants}>
-              <p className="eyebrow">Past entries</p>
-              {entries.map((entry) => (
-                <div className="entry-item" key={`${entry.date}-${entry.note}`}>
-                  <strong>{entry.date}</strong>
-                  <p>{entry.note}</p>
-                </div>
-              ))}
-            </motion.aside>
+              <button className="btn btn-outline" type="button" onClick={handleSaveEntry}>
+                Save entry
+              </button>
+            </div>
+            <textarea
+              className="journal-textarea"
+              placeholder="Let the page hold what you are carrying..."
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+            />
           </motion.div>
+          <motion.aside className="journal-sidebar" variants={itemVariants}>
+            <p className="eyebrow">Past entries</p>
+            {entries.map((entry) => (
+              <div className="entry-item" key={`${entry.date}-${entry.note}`}>
+                <strong>{entry.date}</strong>
+                <p>{entry.note}</p>
+              </div>
+            ))}
+          </motion.aside>
         </motion.div>
-      </Skeleton>
+      </motion.div>
     </section>
   )
 }

@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
 import AuthProvider from '@/components/auth/auth-provider'
-import AppShell from '@/components/layout/app-shell'
+import NavBar from '@/components/layout/navbar'
 import { getOptionalSession } from '@/lib/session'
 import './globals.css'
 
-// Import bones registry (run `npx boneyard-js build` to generate bones first)
-// import './bones/registry'
 
 export const metadata: Metadata = {
   title: 'Mindwell',
@@ -17,9 +15,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning>
         <AuthProvider session={session}>
-          <AppShell>{children}</AppShell>
+          <div className="app-shell">
+            <div className="ambient-shape shape-1" aria-hidden="true" />
+            <div className="ambient-shape shape-2" aria-hidden="true" />
+            <NavBar />
+            <main className="app-main">{children}</main>
+          </div>
         </AuthProvider>
       </body>
     </html>

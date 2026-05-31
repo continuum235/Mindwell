@@ -5,14 +5,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
-import { Skeleton } from 'boneyard-js/react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, itemVariants } from '@/lib/animations'
 
 export default function LoginPage() {
   const router = useRouter()
   const { status } = useSession()
-  const [isLoading, setIsLoading] = useState(true)
+  const isLoading = status === 'loading'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -20,11 +19,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 900)
-    return () => window.clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -150,113 +144,133 @@ export default function LoginPage() {
     setDisplayName('')
   }
 
+  if (isLoading) {
+    return (
+      <section className="page">
+        <AnimatedBackdrop />
+        <div className="container" aria-busy="true" aria-live="polite">
+          <div className="login-page">
+            <div className="login-media skeleton skeleton-media" aria-hidden="true" />
+            <div className="login-panel">
+              <div className="skeleton skeleton-eyebrow" />
+              <div className="skeleton skeleton-title" />
+              <div className="skeleton skeleton-line" />
+              <div className="skeleton skeleton-input" />
+              <div className="skeleton skeleton-input" />
+              <div className="skeleton skeleton-button" />
+              <div className="skeleton skeleton-link" />
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="page">
       <AnimatedBackdrop />
-      <Skeleton name="login-page" loading={isLoading}>
-        <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
-          <motion.div className="login-page" variants={containerVariants}>
-            <motion.div className="login-media" aria-hidden="true" variants={itemVariants} />
-            <motion.div className="login-panel" variants={itemVariants}>
-              <div className="auth-header">
-                <p className="eyebrow">{isSignUp ? 'Create your account' : 'Welcome back to your space'}</p>
-                <h1>{isSignUp ? 'Join Mindwell' : 'Sign in to Mindwell'}</h1>
-                <p>A private, compassionate space for daily reflection and somatic care.</p>
-              </div>
+      <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
+        <motion.div className="login-page" variants={containerVariants}>
+          <motion.div className="login-media" aria-hidden="true" variants={itemVariants} />
+          <motion.div className="login-panel" variants={itemVariants}>
+            <div className="auth-header">
+              <p className="eyebrow">{isSignUp ? 'Create your account' : 'Welcome back to your space'}</p>
+              <h1>{isSignUp ? 'Join Mindwell' : 'Sign in to Mindwell'}</h1>
+              <p>A private, compassionate space for daily reflection and somatic care.</p>
+            </div>
 
-              <form
-                className="form"
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  if (isSignUp) {
-                    void handleSignUp()
-                  } else {
-                    void handleLogin()
-                  }
-                }}
-              >
-                {isSignUp && (
-                  <div className="field">
-                    <input
-                      id="displayName"
-                      type="text"
-                      placeholder=" "
-                      value={displayName}
-                      onChange={(event) => setDisplayName(event.target.value)}
-                      disabled={isSubmitting}
-                    />
-                    <label htmlFor="displayName">Your name</label>
-                  </div>
-                )}
+            <form
+              className="form"
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (isSignUp) {
+                  void handleSignUp()
+                } else {
+                  void handleLogin()
+                }
+              }}
+            >
+              {isSignUp && (
                 <div className="field">
                   <input
-                    id="email"
-                    type="email"
+                    id="displayName"
+                    type="text"
                     placeholder=" "
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    value={displayName}
+                    onChange={(event) => setDisplayName(event.target.value)}
                     disabled={isSubmitting}
                   />
-                  <label htmlFor="email">Email address</label>
+                  <label htmlFor="displayName">Your name</label>
                 </div>
+              )}
+              <div className="field">
+                <input
+                  id="email"
+                  type="email"
+                  placeholder=" "
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={isSubmitting}
+                />
+                <label htmlFor="email">Email address</label>
+              </div>
+              <div className="field">
+                <input
+                  id="password"
+                  type="password"
+                  placeholder=" "
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  disabled={isSubmitting}
+                />
+                <label htmlFor="password">Password</label>
+              </div>
+              {isSignUp && (
                 <div className="field">
                   <input
-                    id="password"
+                    id="confirmPassword"
                     type="password"
                     placeholder=" "
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
                     disabled={isSubmitting}
                   />
-                  <label htmlFor="password">Password</label>
+                  <label htmlFor="confirmPassword">Confirm password</label>
                 </div>
-                {isSignUp && (
-                  <div className="field">
-                    <input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder=" "
-                      value={confirmPassword}
-                      onChange={(event) => setConfirmPassword(event.target.value)}
-                      disabled={isSubmitting}
-                    />
-                    <label htmlFor="confirmPassword">Confirm password</label>
-                  </div>
-                )}
-                {error && (
-                  <div className="auth-error" role="alert">
-                    {error}
-                  </div>
-                )}
-                <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Please wait...' : isSignUp ? 'Create account' : 'Enter your space'}
+              )}
+              {error && (
+                <div className="auth-error" role="alert">
+                  {error}
+                </div>
+              )}
+              <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Please wait...' : isSignUp ? 'Create account' : 'Enter your space'}
+              </button>
+
+              <div className="auth-toggle">
+                <span>{isSignUp ? 'Already have an account?' : 'New to Mindwell?'}</span>
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={toggleMode}
+                  disabled={isSubmitting}
+                >
+                  {isSignUp ? 'Sign in' : 'Create an account'}
                 </button>
+              </div>
 
-                <div className="auth-toggle">
-                  <span>{isSignUp ? 'Already have an account?' : 'New to Mindwell?'}</span>
-                  <button
-                    type="button"
-                    className="text-link"
-                    onClick={toggleMode}
-                    disabled={isSubmitting}
-                  >
-                    {isSignUp ? 'Sign in' : 'Create an account'}
-                  </button>
+              {!isSignUp && (
+                <div className="login-footer">
+                  <span>Need a gentle reset?</span>
+                  <Link className="text-link" href="/about">
+                    Read our ethos
+                  </Link>
                 </div>
-
-                {!isSignUp && (
-                  <div className="login-footer">
-                    <span>Need a gentle reset?</span>
-                    <Link className="text-link" href="/about">
-                      Read our ethos
-                    </Link>
-                  </div>
-                )}
-              </form>
-            </motion.div>
+              )}
+            </form>
           </motion.div>
         </motion.div>
-      </Skeleton>
+      </motion.div>
     </section>
   )
 }
