@@ -28,10 +28,9 @@ export default function AssessmentPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<AssessmentState>('/api/assessment').catch(() => fallbackAssessment),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<AssessmentState>('/api/assessment').catch(
+        () => fallbackAssessment,
+      )
 
       if (!active) {
         return
@@ -74,10 +73,8 @@ export default function AssessmentPage() {
           <div className="skeleton skeleton-eyebrow" />
           <div className="assessment-shell">
             <div>
-              <div className="progress-track">
-                <div className="skeleton skeleton-progress" />
-              </div>
-              <div className="skeleton skeleton-eyebrow" />
+              <div className="skeleton skeleton-progress" />
+              <div className="skeleton skeleton-line skeleton-medium" />
             </div>
             <div>
               <div className="skeleton skeleton-title" />
@@ -85,8 +82,8 @@ export default function AssessmentPage() {
               <div className="skeleton skeleton-line skeleton-medium" />
             </div>
             <div className="option-grid">
-              {Array.from({ length: 5 }, (_, index) => (
-                <div key={`option-skeleton-${index}`} className="skeleton skeleton-pill" />
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div className="skeleton skeleton-pill" key={`assessment-option-${index}`} />
               ))}
             </div>
             <div className="hero-actions">

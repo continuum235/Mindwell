@@ -5,7 +5,6 @@ export async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit)
       'Content-Type': 'application/json',
       ...(init?.headers || {}),
     },
-    cache: 'no-store',
   })
 
   if (!response.ok) {

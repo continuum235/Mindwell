@@ -18,10 +18,7 @@ export default function StressPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<ResourceItem[]>('/api/resources').catch(() => []),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<ResourceItem[]>('/api/resources').catch(() => [])
 
       if (!active) {
         return
@@ -50,20 +47,20 @@ export default function StressPage() {
           <div className="skeleton skeleton-title" />
           <div className="skeleton skeleton-line" />
           <div className="filter-row">
-            {Array.from({ length: 5 }, (_, index) => (
-              <span key={`filter-skeleton-${index}`} className="skeleton skeleton-chip" />
+            {filters.map((filter) => (
+              <div className="skeleton skeleton-chip" key={`filter-skeleton-${filter}`} />
             ))}
           </div>
           <div className="resource-grid">
-            {Array.from({ length: 4 }, (_, index) => (
-              <article className="resource-card" key={`resource-skeleton-${index}`}>
-                <div className="skeleton skeleton-image" />
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div className="resource-card" key={`resource-skeleton-${index}`}>
+                <div className="resource-thumb skeleton skeleton-image" />
                 <div className="resource-body">
+                  <div className="skeleton skeleton-title" />
                   <div className="skeleton skeleton-line skeleton-medium" />
-                  <div className="skeleton skeleton-line skeleton-short" />
                   <div className="skeleton skeleton-button skeleton-button-outline" />
                 </div>
-              </article>
+              </div>
             ))}
           </div>
         </div>

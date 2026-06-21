@@ -74,10 +74,7 @@ export default function ChatPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<ChatMessage[]>('/api/chat').catch(() => fallbackMessages),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<ChatMessage[]>('/api/chat').catch(() => fallbackMessages)
 
       if (!active) {
         return
@@ -119,15 +116,12 @@ export default function ChatPage() {
           <div className="skeleton skeleton-title" />
           <div className="chat-shell">
             <div className="chat-thread">
-              <div className="message-row">
-                <div className="skeleton skeleton-bubble" />
-              </div>
-              <div className="message-row">
-                <div className="skeleton skeleton-bubble skeleton-bubble-short" />
-              </div>
-              <div className="message-row">
-                <div className="skeleton skeleton-bubble" />
-              </div>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  className={`skeleton skeleton-bubble ${index % 2 === 0 ? '' : 'skeleton-bubble-short'}`}
+                  key={`chat-bubble-${index}`}
+                />
+              ))}
             </div>
             <div className="chat-input">
               <div className="skeleton skeleton-input" />

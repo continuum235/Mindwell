@@ -21,10 +21,7 @@ export default function ProfilePage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<ProfileSettings>('/api/profile').catch(() => fallbackSettings),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<ProfileSettings>('/api/profile').catch(() => fallbackSettings)
 
       if (!active) {
         return
@@ -59,13 +56,12 @@ export default function ProfilePage() {
           <div className="skeleton skeleton-title" />
           <div className="skeleton skeleton-line" />
           <div className="settings-list">
-            {Array.from({ length: 3 }, (_, index) => (
+            {Array.from({ length: 3 }).map((_, index) => (
               <div className="setting-card" key={`setting-skeleton-${index}`}>
                 <div className="setting-row">
                   <div className="skeleton-stack">
-                    <div className="skeleton skeleton-title" />
-                    <div className="skeleton skeleton-line" />
                     <div className="skeleton skeleton-line skeleton-medium" />
+                    <div className="skeleton skeleton-line" />
                   </div>
                   <div className="skeleton skeleton-toggle" />
                 </div>

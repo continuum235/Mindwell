@@ -11,7 +11,7 @@ import { containerVariants, itemVariants } from '@/lib/animations'
 export default function LoginPage() {
   const router = useRouter()
   const { status } = useSession()
-  const [isLoading, setIsLoading] = useState(true)
+  const isLoading = status === 'loading'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -19,11 +19,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 900)
-    return () => window.clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -120,7 +115,6 @@ export default function LoginPage() {
         return
       }
 
-      // Sign in after successful signup
       const signInResult = await signIn('credentials', {
         email,
         password,
@@ -156,23 +150,15 @@ export default function LoginPage() {
         <AnimatedBackdrop />
         <div className="container" aria-busy="true" aria-live="polite">
           <div className="login-page">
-            <div className="login-media skeleton skeleton-media" />
+            <div className="login-media skeleton skeleton-media" aria-hidden="true" />
             <div className="login-panel">
               <div className="skeleton skeleton-eyebrow" />
               <div className="skeleton skeleton-title" />
               <div className="skeleton skeleton-line" />
-              <div className="skeleton skeleton-line skeleton-medium" />
-              <div className="form">
-                {isSignUp && <div className="skeleton skeleton-input" />}
-                <div className="skeleton skeleton-input" />
-                <div className="skeleton skeleton-input" />
-                {isSignUp && <div className="skeleton skeleton-input" />}
-                <div className="skeleton skeleton-button" />
-                <div className="login-footer">
-                  <div className="skeleton skeleton-line skeleton-short" />
-                  <div className="skeleton skeleton-link" />
-                </div>
-              </div>
+              <div className="skeleton skeleton-input" />
+              <div className="skeleton skeleton-input" />
+              <div className="skeleton skeleton-button" />
+              <div className="skeleton skeleton-link" />
             </div>
           </div>
         </div>

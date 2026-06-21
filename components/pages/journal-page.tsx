@@ -32,10 +32,7 @@ export default function JournalPage() {
     let active = true
 
     async function load() {
-      const [data] = await Promise.all([
-        fetchJson<JournalEntry[]>('/api/journal').catch(() => fallbackEntries),
-        new Promise((resolve) => window.setTimeout(resolve, 900)),
-      ])
+      const data = await fetchJson<JournalEntry[]>('/api/journal').catch(() => fallbackEntries)
 
       if (!active) {
         return
@@ -80,7 +77,7 @@ export default function JournalPage() {
               <div className="journal-ui">
                 <div className="skeleton-stack">
                   <div className="skeleton skeleton-title" />
-                  <div className="skeleton skeleton-eyebrow" />
+                  <div className="skeleton skeleton-line skeleton-short" />
                 </div>
                 <div className="skeleton skeleton-button skeleton-button-outline" />
               </div>
@@ -88,12 +85,9 @@ export default function JournalPage() {
             </div>
             <aside className="journal-sidebar">
               <div className="skeleton skeleton-eyebrow" />
-              {Array.from({ length: 3 }, (_, index) => (
-                <div className="entry-item" key={`entry-skeleton-${index}`}>
-                  <div className="skeleton skeleton-line skeleton-medium" />
-                  <div className="skeleton skeleton-line" />
-                </div>
-              ))}
+              <div className="skeleton skeleton-line" />
+              <div className="skeleton skeleton-line skeleton-medium" />
+              <div className="skeleton skeleton-line" />
             </aside>
           </div>
         </div>

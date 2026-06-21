@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
-import { ensureApiSession, getOptionalSession } from '@/lib/session'
+import { ensureApiSession } from '@/lib/session'
 import { getHomeSnapshot } from '@/lib/store'
 
 export async function GET() {
-  const unauthorized = await ensureApiSession()
+  const { session, response } = await ensureApiSession()
 
-  if (unauthorized) {
-    return unauthorized
+  if (response) {
+    return response
   }
 
-  const session = await getOptionalSession()
   return NextResponse.json(await getHomeSnapshot(session?.user?.email ?? undefined))
 }

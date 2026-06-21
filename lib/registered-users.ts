@@ -1,11 +1,10 @@
-import { randomUUID } from 'node:crypto'
-import { getDb } from '@/lib/mongodb'
+import bcrypt from 'bcryptjs'
 
 interface RegisteredUser {
   id: string
   name: string
   email: string
-  password: string
+  passwordHash: string
 }
 
 const memoryUsers = new Map<string, RegisteredUser>()
@@ -16,6 +15,7 @@ function normalizeEmail(email: string) {
 
 export async function findUserByEmail(email: string): Promise<RegisteredUser | null> {
   const normalizedEmail = normalizeEmail(email)
+  const { getDb } = await import('@/lib/mongodb')
   const db = await getDb()
 
   if (!db) {
@@ -26,18 +26,25 @@ export async function findUserByEmail(email: string): Promise<RegisteredUser | n
   return (await collection.findOne({ email: normalizedEmail })) ?? null
 }
 
+export async function verifyUserPassword(user: RegisteredUser, password: string): Promise<boolean> {
+  return bcrypt.compare(password, user.passwordHash)
+}
+
 export async function createRegisteredUser(input: {
   name: string
   email: string
   password: string
 }): Promise<RegisteredUser> {
+  const passwordHash = await bcrypt.hash(input.password, 12)
+
   const user: RegisteredUser = {
-    id: randomUUID(),
+    id: globalThis.crypto.randomUUID(),
     name: input.name.trim(),
     email: normalizeEmail(input.email),
-    password: input.password,
+    passwordHash,
   }
 
+  const { getDb } = await import('@/lib/mongodb')
   const db = await getDb()
 
   if (!db) {
@@ -46,7 +53,6 @@ export async function createRegisteredUser(input: {
   }
 
   const collection = db.collection<RegisteredUser>('registered_users')
-  await collection.createIndex({ email: 1 }, { unique: true })
   await collection.insertOne(user)
   return user
 }
