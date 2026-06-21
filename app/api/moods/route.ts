@@ -22,11 +22,11 @@ export async function POST(request: NextRequest) {
 
   const session = await getOptionalSession()
 
-  const body = (await request.json()) as { label?: string }
+  const body = (await request.json()) as { label?: string; note?: string; day?: number }
 
   if (!body.label) {
     return NextResponse.json({ error: 'Mood label is required.' }, { status: 400 })
   }
 
-  return NextResponse.json(await saveMood(body.label, session?.user?.email ?? undefined))
+  return NextResponse.json(await saveMood(body.label, body.note, body.day, session?.user?.email ?? undefined))
 }

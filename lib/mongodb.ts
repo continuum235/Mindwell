@@ -11,9 +11,7 @@ export async function getDb() {
     return null
   }
 
-  const clientPromise =
-    global.mongoClientPromise ??
-    new MongoClient(uri).connect()
+  const clientPromise = global.mongoClientPromise ?? new MongoClient(uri).connect()
 
   global.mongoClientPromise = clientPromise
 

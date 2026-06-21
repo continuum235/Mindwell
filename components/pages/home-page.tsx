@@ -20,8 +20,7 @@ const fallbackSnapshot: HomeSnapshot = {
     title: 'Shoulder release in soft light',
     type: 'Somatic',
     duration: '8 min',
-    image:
-      'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=1200&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=1200&auto=format&fit=crop',
   },
 }
 
@@ -162,9 +161,7 @@ export default function HomePage() {
         <motion.div className="home-grid" variants={gridVariants}>
           <motion.article className="card card-primary" variants={itemVariants}>
             <h2>Log today&apos;s mood</h2>
-            <p>
-              A soft check-in to notice how your body feels right now. No judgment, just truth.
-            </p>
+            <p>A soft check-in to notice how your body feels right now. No judgment, just truth.</p>
             <div className="chip-row">
               <span className="chip">Grounded</span>
               <span className="chip">Tender</span>

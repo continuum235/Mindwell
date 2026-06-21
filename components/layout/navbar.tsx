@@ -105,11 +105,7 @@ export default function NavBar() {
                   {links.map((link) => {
                     const isActive = pathname === link.href
                     return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`mobile-nav-link${isActive ? ' active' : ''}`}
-                      >
+                      <Link key={link.href} href={link.href} className={`mobile-nav-link${isActive ? ' active' : ''}`}>
                         {link.label}
                       </Link>
                     )
@@ -128,9 +124,7 @@ export default function NavBar() {
                       Login
                     </Link>
                   )}
-                  {session?.user?.name && (
-                    <span className="mobile-user-name">Signed in as {session.user.name}</span>
-                  )}
+                  {session?.user?.name && <span className="mobile-user-name">Signed in as {session.user.name}</span>}
                 </nav>
               </div>
             </motion.div>

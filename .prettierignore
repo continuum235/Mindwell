@@ -1,0 +1,10 @@
+.next
+node_modules
+dist
+.next
+*.local
+.env
+.env.*
+coverage
+.next
+*.md

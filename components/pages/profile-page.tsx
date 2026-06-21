@@ -129,9 +129,7 @@ export default function ProfilePage() {
                 <input
                   type="checkbox"
                   checked={settings.anonymousInsights}
-                  onChange={(event) =>
-                    void updateSettings({ anonymousInsights: event.target.checked })
-                  }
+                  onChange={(event) => void updateSettings({ anonymousInsights: event.target.checked })}
                 />
               </label>
             </div>

@@ -40,10 +40,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(rawCredentials) {
-        const email =
-          typeof rawCredentials?.email === 'string' ? rawCredentials.email.trim().toLowerCase() : ''
-        const password =
-          typeof rawCredentials?.password === 'string' ? rawCredentials.password : ''
+        const email = typeof rawCredentials?.email === 'string' ? rawCredentials.email.trim().toLowerCase() : ''
+        const password = typeof rawCredentials?.password === 'string' ? rawCredentials.password : ''
 
         if (!email || !password) {
           return null

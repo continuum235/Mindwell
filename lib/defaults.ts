@@ -1,11 +1,4 @@
-import type {
-  AppState,
-  ChatMessage,
-  JournalEntry,
-  MoodEntry,
-  ProfileSettings,
-  ResourceItem,
-} from '@/types/app'
+import type { AppState, ChatMessage, JournalEntry, MoodEntry, ProfileSettings, ResourceItem } from '@/types/app'
 
 const defaultMoods: MoodEntry[] = [
   { day: 3, label: 'Tender', tone: 'mood-rose', createdAt: '2026-04-03T08:00:00.000Z' },
@@ -35,29 +28,25 @@ const defaultResources: ResourceItem[] = [
     title: 'Shoulder release in soft light',
     type: 'Somatic',
     duration: '8 min',
-    image:
-      'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Warm breath for a busy mind',
     type: 'Breathwork',
     duration: '5 min',
-    image:
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Grounding audio with rain',
     type: 'Audio',
     duration: '12 min',
-    image:
-      'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Slow movement for hips',
     type: 'Movement',
     duration: '10 min',
-    image:
-      'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1200&q=80',
   },
 ]
 
@@ -97,14 +86,8 @@ export function createDefaultState(): AppState {
       questionNumber: 1,
       totalQuestions: 5,
       question: 'How often have you felt little interest or pleasure in doing things?',
-      description:
-        'Choose the response that best matches the last two weeks.',
-      options: [
-        'Not at all',
-        'Several days',
-        'More than half the days',
-        'Nearly every day',
-      ],
+      description: 'Choose the response that best matches the last two weeks.',
+      options: ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'],
       lastAnswer: null,
       answers: [],
       completed: false,

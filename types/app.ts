@@ -1,14 +1,10 @@
-export type MoodTone =
-  | 'mood-soft'
-  | 'mood-rose'
-  | 'mood-sage'
-  | 'mood-terracotta'
-  | 'mood-mist'
+export type MoodTone = 'mood-soft' | 'mood-rose' | 'mood-sage' | 'mood-terracotta' | 'mood-mist'
 
 export interface MoodEntry {
   day: number
   label: string
   tone: MoodTone
+  note?: string
   createdAt: string
 }
 

@@ -312,7 +312,9 @@ em {
   padding: 8px 12px;
   border-radius: 999px;
   color: rgba(58, 53, 50, 0.8);
-  transition: background-color var(--transition-fast), color var(--transition-fast),
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
     transform var(--transition-fast);
 }
 
@@ -353,8 +355,12 @@ em {
   border: 1px solid transparent;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: transform var(--transition-fast), background-color var(--transition-fast),
-    border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast),
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
     opacity var(--transition-fast);
   background: transparent;
 }
@@ -483,7 +489,8 @@ em {
 
 .login-media {
   min-height: 420px;
-  background: linear-gradient(rgba(58, 53, 50, 0.08), rgba(58, 53, 50, 0.2)),
+  background:
+    linear-gradient(rgba(58, 53, 50, 0.08), rgba(58, 53, 50, 0.2)),
     url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80');
   background-size: cover;
   background-position: center;
@@ -520,7 +527,10 @@ em {
   top: 16px;
   font-size: 0.85rem;
   color: rgba(58, 53, 50, 0.6);
-  transition: top var(--transition-fast), font-size var(--transition-fast), color var(--transition-fast);
+  transition:
+    top var(--transition-fast),
+    font-size var(--transition-fast),
+    color var(--transition-fast);
   pointer-events: none;
 }
 
@@ -637,11 +647,13 @@ em {
 .mood-day {
   min-height: 70px;
   border-radius: 12px;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid rgba(227, 220, 210, 0.8);
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   font-size: 0.8rem;
   color: rgba(58, 53, 50, 0.8);
 }
@@ -671,10 +683,59 @@ em {
   box-shadow: 0 2px 8px rgba(140, 154, 139, 0.15);
 }
 
+.mood-day.selected {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+  transform: scale(1.04);
+  transition:
+    transform var(--transition-fast),
+    outline var(--transition-fast);
+}
+
+.mood-day {
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    outline var(--transition-fast);
+}
+
+.mood-day:hover {
+  transform: translateY(-2px);
+  border-color: var(--sage);
+  box-shadow: 0 4px 12px rgba(58, 53, 50, 0.12);
+}
+
+.mood-has-note {
+  font-style: italic;
+  font-size: 0.85rem;
+  color: rgba(58, 53, 50, 0.5);
+}
+
 .mood-display {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mood-day-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.mood-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  color: rgba(58, 53, 50, 0.75);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  word-break: keep-all;
 }
 
 .mood-indicator {
@@ -715,6 +776,88 @@ em {
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.mood-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--sage);
+  background: var(--mist);
+}
+
+.mood-pill-active {
+  border-color: var(--terracotta);
+  background: rgba(184, 111, 87, 0.1);
+  box-shadow: 0 2px 8px rgba(184, 111, 87, 0.15);
+}
+
+.mood-editor {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.mood-editor-shell.skeleton {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+  min-height: 240px;
+}
+
+.mood-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mood-editor-header h2 {
+  margin: 0;
+}
+
+.mood-editor-badge {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--sage-muted);
+  color: var(--sage);
+  font-weight: 500;
+}
+
+.mood-note {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  background: var(--mist);
+  resize: vertical;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.mood-note:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 3px rgba(140, 154, 139, 0.15);
 }
 
 .mood-dot {
@@ -1023,8 +1166,8 @@ em {
   }
 
   .mood-day {
-    min-height: 60px;
-    padding: 8px;
+    min-height: 56px;
+    padding: 6px;
   }
 
   .chat-shell {

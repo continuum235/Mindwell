@@ -30,7 +30,7 @@ const fallbackMessages: ChatMessage[] = [
   },
   {
     sender: 'companion',
-    text: 'Let\'s try the 5-4-3-2-1 technique. Name 5 things you can see around you right now.',
+    text: "Let's try the 5-4-3-2-1 technique. Name 5 things you can see around you right now.",
     createdAt: '2026-04-11T09:04:00.000Z',
   },
   {
@@ -60,7 +60,7 @@ const fallbackMessages: ChatMessage[] = [
   },
   {
     sender: 'companion',
-    text: 'I\'m glad to hear that. Remember, you can use this technique anytime you need to ground yourself. What would help you most right now?',
+    text: "I'm glad to hear that. Remember, you can use this technique anytime you need to ground yourself. What would help you most right now?",
     createdAt: '2026-04-11T09:10:00.000Z',
   },
 ]
