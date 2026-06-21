@@ -13,12 +13,7 @@ const fallbackAssessment: AssessmentState = {
   totalQuestions: 5,
   question: 'How often have you felt little interest or pleasure in doing things?',
   description: 'Choose the response that best matches the last two weeks.',
-  options: [
-    'Not at all',
-    'Several days',
-    'More than half the days',
-    'Nearly every day',
-  ],
+  options: ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'],
   lastAnswer: null,
   answers: [],
   completed: false,
@@ -169,8 +164,7 @@ export default function AssessmentPage() {
           </motion.div>
           {assessment.completed ? (
             <motion.p className="eyebrow" variants={itemVariants}>
-              This reflection is not a diagnosis. Reach out to a qualified professional if you need
-              more support.
+              This reflection is not a diagnosis. Reach out to a qualified professional if you need more support.
             </motion.p>
           ) : null}
         </motion.div>

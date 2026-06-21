@@ -36,9 +36,7 @@ export default function StressPage() {
   }, [])
 
   const filteredResources =
-    activeFilter === 'All'
-      ? resources
-      : resources.filter((resource) => resource.type === activeFilter)
+    activeFilter === 'All' ? resources : resources.filter((resource) => resource.type === activeFilter)
 
   if (isLoading) {
     return (
@@ -79,17 +77,11 @@ export default function StressPage() {
         </motion.p>
         <motion.h1 variants={itemVariants}>A serene library of gentle resources.</motion.h1>
         <motion.p variants={itemVariants}>
-          Choose what your nervous system is asking for today. Every practice is designed for
-          softness and safety.
+          Choose what your nervous system is asking for today. Every practice is designed for softness and safety.
         </motion.p>
         <motion.div className="filter-row" variants={itemVariants}>
           {filters.map((filter) => (
-            <button
-              key={filter}
-              className="filter-chip"
-              type="button"
-              onClick={() => setActiveFilter(filter)}
-            >
+            <button key={filter} className="filter-chip" type="button" onClick={() => setActiveFilter(filter)}>
               {filter}
             </button>
           ))}

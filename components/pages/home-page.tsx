@@ -20,8 +20,7 @@ const fallbackSnapshot: HomeSnapshot = {
     title: 'Shoulder release in soft light',
     type: 'Somatic',
     duration: '8 min',
-    image:
-      'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=1200&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=1200&auto=format&fit=crop',
   },
 }
 

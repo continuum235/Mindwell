@@ -5,9 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { fetchJson } from '@/lib/fetcher'
+import { getTodayCalendarDay } from '@/lib/date'
 import type { MoodEntry } from '@/types/app'
-
-const moodClasses = ['mood-soft', 'mood-rose', 'mood-sage', 'mood-terracotta', 'mood-mist'] as const
 
 const moodOptions = [
   { label: 'Grounded', tone: 'var(--sage)' },
@@ -39,14 +38,20 @@ export default function MoodPage() {
       if (!active) return
 
       setEntries(data)
+      const todayEntry = data.find((e) => e.day === selectedDay)
+      if (todayEntry) {
+        setSelectedLabel(todayEntry.label)
+        setDescription(todayEntry.note ?? '')
+      }
       setIsLoading(false)
     }
 
     load()
-
     return () => {
       active = false
     }
+    // selectedDay is stable (initial value only), so it won't cause re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSelectMood(label: string) {
@@ -91,7 +96,7 @@ export default function MoodPage() {
               <div className="skeleton skeleton-day" key={`mood-day-${index}`} />
             ))}
           </div>
-          <div className="mood-actions">
+          <div className="mood-editor-shell skeleton">
             <div className="skeleton skeleton-title" />
             <div className="mood-options">
               {moodOptions.map((option) => (
@@ -127,7 +132,7 @@ export default function MoodPage() {
             const isToday = day === today
 
             return (
-              <div
+              <button
                 key={`day-${day}`}
                 className={[
                   'mood-day',

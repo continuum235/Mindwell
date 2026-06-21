@@ -249,12 +249,7 @@ export default function LoginPage() {
 
               <div className="auth-toggle">
                 <span>{isSignUp ? 'Already have an account?' : 'New to Mindwell?'}</span>
-                <button
-                  type="button"
-                  className="text-link"
-                  onClick={toggleMode}
-                  disabled={isSubmitting}
-                >
+                <button type="button" className="text-link" onClick={toggleMode} disabled={isSubmitting}>
                   {isSignUp ? 'Sign in' : 'Create an account'}
                 </button>
               </div>

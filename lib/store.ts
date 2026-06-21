@@ -157,11 +157,7 @@ async function writeScopedValue<T>(
   }
 
   const collection = db.collection<{ key: string; value: T }>(collectionName)
-  await collection.updateOne(
-    { key: `${keyPrefix}-${normalizedEmail}` },
-    { $set: { value } },
-    { upsert: true },
-  )
+  await collection.updateOne({ key: `${keyPrefix}-${normalizedEmail}` }, { $set: { value } }, { upsert: true })
 }
 
 function labelToTone(label: string): MoodTone {
@@ -222,10 +218,7 @@ function buildAssessmentState(progress?: Partial<StoredAssessmentProgress>): Ass
   const answers = cloneValue(progress?.answers ?? [])
   const completed = progress?.completed === true
   const resultMessage = progress?.resultMessage ?? null
-  const safeIndex = Math.min(
-    Math.max(progress?.currentQuestionIndex ?? 0, 0),
-    assessmentQuestions.length - 1,
-  )
+  const safeIndex = Math.min(Math.max(progress?.currentQuestionIndex ?? 0, 0), assessmentQuestions.length - 1)
   const question = assessmentQuestions[safeIndex]
 
   return {
@@ -319,18 +312,19 @@ export async function getMoods(userEmail?: string) {
   return readScopedValue('user_moods', 'moods', userEmail, [], memoryMoods)
 }
 
-export async function saveMood(label: string, userEmail?: string) {
-  const day = getTodayCalendarDay()
+export async function saveMood(label: string, note?: string, day?: number, userEmail?: string) {
+  const targetDay = day ?? getTodayCalendarDay()
   const entry: MoodEntry = {
-    day,
+    day: targetDay,
     label,
     tone: labelToTone(label),
+    note: note?.trim() || undefined,
     createdAt: new Date().toISOString(),
   }
 
   if (!userEmail) {
     const state = await readState()
-    const nextMoods = state.moods.filter((item) => item.day !== day)
+    const nextMoods = state.moods.filter((item) => item.day !== targetDay)
     nextMoods.push(entry)
     nextMoods.sort((left, right) => left.day - right.day)
     state.moods = nextMoods
@@ -339,7 +333,7 @@ export async function saveMood(label: string, userEmail?: string) {
   }
 
   const moods = await readScopedValue('user_moods', 'moods', userEmail, [], memoryMoods)
-  const nextMoods = moods.filter((item) => item.day !== day)
+  const nextMoods = moods.filter((item) => item.day !== targetDay)
   nextMoods.push(entry)
   nextMoods.sort((left, right) => left.day - right.day)
   await writeScopedValue('user_moods', 'moods', userEmail, nextMoods, memoryMoods)
@@ -478,13 +472,7 @@ export async function getProfileSettings(userEmail?: string) {
     return state.profileSettings
   }
 
-  return readScopedValue(
-    'user_profiles',
-    'profile',
-    userEmail,
-    createDefaultState().profileSettings,
-    memoryProfiles,
-  )
+  return readScopedValue('user_profiles', 'profile', userEmail, createDefaultState().profileSettings, memoryProfiles)
 }
 
 export async function updateProfileSettings(settings: Partial<ProfileSettings>, userEmail?: string) {
