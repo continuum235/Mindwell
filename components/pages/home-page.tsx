@@ -5,24 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, gridVariants, itemVariants } from '@/lib/animations'
-import { fetchJson } from '@/lib/fetcher'
 import type { HomeSnapshot } from '@/types/app'
-
-const fallbackSnapshot: HomeSnapshot = {
-  careStreak: '6 days',
-  breathwork: '5 minutes',
-  recentNote: 'Apr 10',
-  latestJournal: {
-    date: 'April 10, 2026',
-    note: 'I felt the tension in my shoulders, and I let myself breathe into it for a few moments.',
-  },
-  suggestedResource: {
-    title: 'Shoulder release in soft light',
-    type: 'Somatic',
-    duration: '8 min',
-    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=1200&auto=format&fit=crop',
-  },
-}
 
 export default function HomePage({ initialSnapshot }: { initialSnapshot: HomeSnapshot }) {
   const snapshot = initialSnapshot
@@ -68,9 +51,7 @@ export default function HomePage({ initialSnapshot }: { initialSnapshot: HomeSna
           <motion.div className="home-grid" variants={gridVariants}>
             <motion.article className="card card-primary" variants={itemVariants}>
               <h2>Log today&apos;s mood</h2>
-              <p>
-                A soft check-in to notice how your body feels right now. No judgment, just truth.
-              </p>
+              <p>A soft check-in to notice how your body feels right now. No judgment, just truth.</p>
               <div className="chip-row">
                 <span className="chip">Grounded</span>
                 <span className="chip">Tender</span>

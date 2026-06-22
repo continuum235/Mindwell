@@ -28,9 +28,7 @@ export default function AssessmentPage() {
     let active = true
 
     async function load() {
-      const data = await fetchJson<AssessmentState>('/api/assessment').catch(
-        () => fallbackAssessment,
-      )
+      const data = await fetchJson<AssessmentState>('/api/assessment').catch(() => fallbackAssessment)
 
       if (!active) {
         return

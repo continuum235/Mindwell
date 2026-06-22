@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { fetchJson } from '@/lib/fetcher'
-import { getTodayCalendarDay } from '@/lib/date'
 import type { MoodEntry } from '@/types/app'
 
 const moodOptions = [
@@ -19,6 +18,8 @@ const moodOptions = [
 function getTodayDay() {
   return new Date().getDate()
 }
+
+const moodClasses = ['mood-soft', 'mood-rose', 'mood-sage', 'mood-terracotta', 'mood-mist']
 
 export default function MoodPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -38,11 +39,6 @@ export default function MoodPage() {
       if (!active) return
 
       setEntries(data)
-      const todayEntry = data.find((e) => e.day === selectedDay)
-      if (todayEntry) {
-        setSelectedLabel(todayEntry.label)
-        setDescription(todayEntry.note ?? '')
-      }
       setIsLoading(false)
     }
 
@@ -50,8 +46,6 @@ export default function MoodPage() {
     return () => {
       active = false
     }
-    // selectedDay is stable (initial value only), so it won't cause re-runs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSelectMood(label: string) {
@@ -119,7 +113,9 @@ export default function MoodPage() {
     <section className="page">
       <AnimatedBackdrop />
       <motion.div className="container" variants={containerVariants} initial="hidden" animate="show">
-        <motion.p className="eyebrow" variants={itemVariants}>Mood tracker</motion.p>
+        <motion.p className="eyebrow" variants={itemVariants}>
+          Mood tracker
+        </motion.p>
         <motion.h1 variants={itemVariants}>Notice your rhythm.</motion.h1>
         <motion.p variants={itemVariants}>
           In one word — how are you today? Choose a preset or type your own. Your word will mark today on the calendar.
@@ -139,7 +135,9 @@ export default function MoodPage() {
                   entry?.tone || moodClasses[index % moodClasses.length],
                   entry ? 'tracked' : '',
                   isToday ? 'mood-day-today' : '',
-                ].filter(Boolean).join(' ')}
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 title={entry ? `Day ${day}: ${entry.label}` : isToday ? 'Today' : `Day ${day}`}
               >
                 <span>{isToday ? '✦' : `Day ${day}`}</span>
@@ -147,7 +145,7 @@ export default function MoodPage() {
                   <span className="mood-indicator">{entry ? '✓' : isToday ? '·' : '+'}</span>
                   {entry && <span className="mood-emotion">{entry.label}</span>}
                 </div>
-              </div>
+              </button>
             )
           })}
         </motion.div>

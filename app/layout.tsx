@@ -4,7 +4,6 @@ import NavBar from '@/components/layout/navbar'
 import { getOptionalSession } from '@/lib/session'
 import './globals.css'
 
-
 export const metadata: Metadata = {
   title: 'Mindwell',
   description: 'A private, compassionate space for daily reflection and somatic care.',

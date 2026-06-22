@@ -24,7 +24,10 @@ export async function getDb() {
     const client = await clientPromise
     return client.db(process.env.MONGODB_DB || 'mindwell')
   } catch (error) {
-    console.warn('MongoDB connection failed, falling back to memory store:', error instanceof Error ? error.message : error)
+    console.warn(
+      'MongoDB connection failed, falling back to memory store:',
+      error instanceof Error ? error.message : error,
+    )
     global.mongoClientPromise = undefined
     return null
   }

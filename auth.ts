@@ -4,18 +4,6 @@ import { getLoginUser } from '@/lib/store'
 import { findUserByEmail, verifyUserPassword } from '@/lib/registered-users'
 import { authConfig } from './auth.config'
 
-function isStaleSessionSecretError(error: Error) {
-  const authError = error as Error & {
-    type?: string
-    cause?: { err?: Error }
-  }
-
-  return (
-    authError.type === 'JWTSessionError' &&
-    authError.cause?.err?.message.includes('no matching decryption secret') === true
-  )
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   secret: process.env.AUTH_SECRET,
@@ -35,7 +23,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Check registered users first
         const registeredUser = await findUserByEmail(email)
-        if (registeredUser && await verifyUserPassword(registeredUser, password)) {
+        if (registeredUser && (await verifyUserPassword(registeredUser, password))) {
           return {
             id: registeredUser.id,
             email: registeredUser.email,

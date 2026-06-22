@@ -869,7 +869,9 @@ em {
 .mood-pill:hover:not(:disabled) {
   background: var(--mist);
   transform: translateY(-1px);
-  transition: transform var(--transition-fast), background var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .mood-pill:disabled {
@@ -1464,15 +1466,42 @@ em {
 }
 
 /* Utilities for Components */
-.relative { position: relative; }
-.absolute { position: absolute; }
-.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-.h-48 { height: 12rem; }
-.w-full { width: 100%; }
-.overflow-hidden { overflow: hidden; }
-.rounded-md { border-radius: var(--radius-md); }
-.mb-4 { margin-bottom: 1rem; }
-.object-cover { object-fit: cover; }
-.bg-gradient-to-t { background: linear-gradient(to top, var(--espresso), transparent); }
-.from-black\/40 { --tw-gradient-from: rgba(0,0,0,0.4); }
-.to-transparent { --tw-gradient-to: transparent; }
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.h-48 {
+  height: 12rem;
+}
+.w-full {
+  width: 100%;
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.object-cover {
+  object-fit: cover;
+}
+.bg-gradient-to-t {
+  background: linear-gradient(to top, var(--espresso), transparent);
+}
+.from-black\/40 {
+  --tw-gradient-from: rgba(0, 0, 0, 0.4);
+}
+.to-transparent {
+  --tw-gradient-to: transparent;
+}
