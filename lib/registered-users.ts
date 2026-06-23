@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs'
+import { prismaClient } from '@/lib/prisma'
 
 interface RegisteredUser {
   id: string
@@ -15,15 +16,24 @@ function normalizeEmail(email: string) {
 
 export async function findUserByEmail(email: string): Promise<RegisteredUser | null> {
   const normalizedEmail = normalizeEmail(email)
-  const { getDb } = await import('@/lib/mongodb')
-  const db = await getDb()
 
-  if (!db) {
+  try {
+    const user = await prismaClient.registeredUser.findUnique({
+      where: { email: normalizedEmail },
+    })
+
+    return user
+      ? {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          passwordHash: user.passwordHash,
+        }
+      : null
+  } catch {
+    // If database is unavailable, fall back to memory store
     return memoryUsers.get(normalizedEmail) ?? null
   }
-
-  const collection = db.collection<RegisteredUser>('registered_users')
-  return (await collection.findOne({ email: normalizedEmail })) ?? null
 }
 
 export async function verifyUserPassword(user: RegisteredUser, password: string): Promise<boolean> {
@@ -44,15 +54,20 @@ export async function createRegisteredUser(input: {
     passwordHash,
   }
 
-  const { getDb } = await import('@/lib/mongodb')
-  const db = await getDb()
-
-  if (!db) {
+  try {
+    await prismaClient.registeredUser.create({
+      data: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        passwordHash: user.passwordHash,
+      },
+    })
+  } catch {
+    // If database is unavailable, fall back to memory store
     memoryUsers.set(user.email, user)
-    return user
   }
 
-  const collection = db.collection<RegisteredUser>('registered_users')
-  await collection.insertOne(user)
   return user
 }
+
