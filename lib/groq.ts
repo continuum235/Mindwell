@@ -21,6 +21,58 @@ function toGroqMessages(messages: ChatMessage[], latestUserText: string) {
   ]
 }
 
+const assessmentQuestions = [
+  'How often have you felt little interest or pleasure in doing things?',
+  'How often have you felt down, depressed, or hopeless?',
+  'How often have you had trouble falling or staying asleep, or sleeping too much?',
+  'How often have you felt tired or had little energy?',
+  'How often have you had poor appetite or overeaten?',
+]
+
+export async function generateAssessmentAnalysis(answers: string[]) {
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error('GROQ_API_KEY is not configured.')
+
+  const assessmentText = assessmentQuestions
+    .map((q, i) => `Q${i + 1}: ${q}\nAnswer: ${answers[i] || 'Not answered'}`)
+    .join('\n\n')
+
+  const response = await fetch(GROQ_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+      temperature: 0.7,
+      max_tokens: 500,
+      messages: [
+        {
+          role: 'system',
+          content:
+            "You are Mindwell, a compassionate mental health advisor. Analyze the user's assessment responses and provide:\n1. A brief, empathetic reflection on what their responses suggest\n2. 2-3 practical, actionable suggestions tailored to their specific answers\n3. A gentle reminder that this is not a clinical diagnosis\n\nBe warm, specific, and concise (max 5 sentences). Focus on the patterns you notice.",
+        },
+        {
+          role: 'user',
+          content: `Here are my assessment responses:\n\n${assessmentText}`,
+        },
+      ],
+    }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`Groq request failed (${response.status}): ${body}`)
+  }
+
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>
+  }
+
+  return data.choices?.[0]?.message?.content?.trim() || ''
+}
+
 export async function generateCompanionReply(messages: ChatMessage[], latestUserText: string) {
   const apiKey = process.env.GROQ_API_KEY
 

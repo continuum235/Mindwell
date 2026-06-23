@@ -18,6 +18,7 @@ const fallbackAssessment: AssessmentState = {
   answers: [],
   completed: false,
   resultMessage: null,
+  analysis: null,
 }
 
 export default function AssessmentPage() {
@@ -122,10 +123,18 @@ export default function AssessmentPage() {
             <p>{assessment.completed ? assessment.resultMessage : assessment.description}</p>
           </motion.div>
           {assessment.completed ? (
-            <motion.div className="card" variants={itemVariants}>
-              <p className="eyebrow">Responses captured</p>
-              <p>{assessment.answers.join(' • ')}</p>
-            </motion.div>
+            <>
+              {assessment.analysis ? (
+                <motion.div className="card analysis-card" variants={itemVariants}>
+                  <p className="eyebrow">AI-powered insight</p>
+                  <p>{assessment.analysis}</p>
+                </motion.div>
+              ) : null}
+              <motion.div className="card" variants={itemVariants}>
+                <p className="eyebrow">Responses captured</p>
+                <p>{assessment.answers.join(' • ')}</p>
+              </motion.div>
+            </>
           ) : (
             <motion.div className="option-grid" variants={gridVariants}>
               {assessment.options.map((option) => (

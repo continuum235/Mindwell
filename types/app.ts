@@ -43,6 +43,7 @@ export interface AssessmentState {
   answers: string[]
   completed: boolean
   resultMessage: string | null
+  analysis: string | null
 }
 
 export interface LoginUser {

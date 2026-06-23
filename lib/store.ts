@@ -1,5 +1,6 @@
 import { prismaClient } from '@/lib/prisma'
 import { createDefaultState } from '@/lib/defaults'
+import { generateAssessmentAnalysis } from '@/lib/groq'
 import { formatLongDate, formatShortDate, getTodayCalendarDay } from '@/lib/date'
 import type {
   AppState,
@@ -27,6 +28,7 @@ interface StoredAssessmentProgress {
   answers: string[]
   completed: boolean
   resultMessage: string | null
+  analysis: string | null
 }
 
 let memoryState: AppState = createDefaultState()
@@ -214,6 +216,7 @@ async function readScopedValue<T>(
             answers: assessment.answers,
             completed: assessment.completed,
             resultMessage: assessment.resultMessage,
+            analysis: assessment.analysis ?? null,
           } as T
         }
         return cloneValue(fallback)
@@ -319,12 +322,15 @@ async function writeScopedValue<T>(
             answers: (assessment as StoredAssessmentProgress).answers,
             completed: (assessment as StoredAssessmentProgress).completed,
             resultMessage: (assessment as StoredAssessmentProgress).resultMessage,
+            analysis: (assessment as StoredAssessmentProgress).analysis ?? null,
           },
           update: {
+            email: normalizedEmail,
             currentQuestionIndex: (assessment as StoredAssessmentProgress).currentQuestionIndex,
             answers: (assessment as StoredAssessmentProgress).answers,
             completed: (assessment as StoredAssessmentProgress).completed,
             resultMessage: (assessment as StoredAssessmentProgress).resultMessage,
+            analysis: (assessment as StoredAssessmentProgress).analysis ?? null,
           },
         })
         break
@@ -412,6 +418,7 @@ function buildAssessmentState(progress?: Partial<StoredAssessmentProgress>): Ass
   const answers = cloneValue(progress?.answers ?? [])
   const completed = progress?.completed === true
   const resultMessage = progress?.resultMessage ?? null
+  const analysis = progress?.analysis ?? null
   const safeIndex = Math.min(Math.max(progress?.currentQuestionIndex ?? 0, 0), assessmentQuestions.length - 1)
   const question = assessmentQuestions[safeIndex]
 
@@ -426,6 +433,7 @@ function buildAssessmentState(progress?: Partial<StoredAssessmentProgress>): Ass
     answers,
     completed,
     resultMessage,
+    analysis,
   }
 }
 
@@ -437,13 +445,14 @@ async function readAssessmentProgress(email?: string) {
       answers: cloneValue(state.assessment.answers ?? []),
       completed: state.assessment.completed ?? false,
       resultMessage: state.assessment.resultMessage ?? null,
+      analysis: state.assessment.analysis ?? null,
     }
   }
 
   return readScopedValue(
     'assessments',
     email,
-    { currentQuestionIndex: 0, answers: [], completed: false, resultMessage: null },
+    { currentQuestionIndex: 0, answers: [], completed: false, resultMessage: null, analysis: null },
     memoryAssessments,
   )
 }
@@ -617,11 +626,22 @@ export async function saveAssessmentAnswer(answer: string, userEmail?: string): 
     return total + Math.max(assessmentQuestions[0].options.indexOf(entry), 0)
   }, 0)
 
+  let analysis: string | null = null
+
+  if (completed) {
+    try {
+      analysis = await generateAssessmentAnalysis(answers)
+    } catch {
+      analysis = null
+    }
+  }
+
   const nextProgress: StoredAssessmentProgress = {
     currentQuestionIndex: completed ? assessmentQuestions.length - 1 : nextIndex,
     answers,
     completed,
     resultMessage: completed ? getAssessmentResultMessage(score) : null,
+    analysis,
   }
 
   await writeAssessmentProgress(nextProgress, userEmail)
@@ -635,6 +655,7 @@ export async function moveAssessment(direction: 'back' | 'reset', userEmail?: st
       answers: [],
       completed: false,
       resultMessage: null,
+      analysis: null,
     }
 
     await writeAssessmentProgress(resetProgress, userEmail)

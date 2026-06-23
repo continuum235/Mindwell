@@ -92,6 +92,7 @@ export function createDefaultState(): AppState {
       answers: [],
       completed: false,
       resultMessage: null,
+      analysis: null,
     },
     user: {
       email: 'hello@mindwell.app',

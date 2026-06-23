@@ -79,6 +79,7 @@ model UserAssessment {
   answers               String[] @default([]) // JSON array stored as text
   completed             Boolean  @default(false)
   resultMessage         String?
+  analysis              String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
