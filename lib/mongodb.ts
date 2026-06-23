@@ -1,4 +1,7 @@
-import { MongoClient } from 'mongodb'
+// MongoDB support is commented out per request.
+// The app can still import getDb(), but it will no longer attempt a MongoDB connection.
+
+/* import { MongoClient } from 'mongodb'
 
 declare global {
   var mongoClientPromise: Promise<MongoClient> | undefined
@@ -31,4 +34,9 @@ export async function getDb() {
     global.mongoClientPromise = undefined
     return null
   }
+}
+*/
+
+export async function getDb() {
+  return null
 }
