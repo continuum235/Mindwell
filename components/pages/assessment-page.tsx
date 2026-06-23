@@ -54,7 +54,7 @@ export default function AssessmentPage() {
     setAssessment(data)
   }
 
-  async function handleAction(action: 'back' | 'continue' | 'reset') {
+  async function handleAction(action: 'back' | 'reset') {
     const data = await fetchJson<AssessmentState>('/api/assessment', {
       method: 'PATCH',
       body: JSON.stringify({ action }),
@@ -150,14 +150,6 @@ export default function AssessmentPage() {
               onClick={() => void handleAction(assessment.completed ? 'reset' : 'back')}
             >
               {assessment.completed ? 'Retake' : 'Back'}
-            </button>
-            <button
-              className="btn btn-primary"
-              type="button"
-              disabled={assessment.completed || !assessment.lastAnswer}
-              onClick={() => void handleAction('continue')}
-            >
-              Continue
             </button>
           </motion.div>
           {assessment.completed ? (

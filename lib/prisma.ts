@@ -18,9 +18,3 @@ export const prismaClient =
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prismaClient = prismaClient
 }
-
-
-
-
-
-

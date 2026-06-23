@@ -25,7 +25,7 @@ export async function PATCH(request: NextRequest): Promise<Response> {
   const { session, response } = await ensureApiSession()
   if (response) return response
 
-  const body = (await request.json()) as { action?: 'back' | 'continue' | 'reset' }
+  const body = (await request.json()) as { action?: 'back' | 'reset' }
 
   if (!body.action) {
     return NextResponse.json({ error: 'Assessment action is required.' }, { status: 400 })

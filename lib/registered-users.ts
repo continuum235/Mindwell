@@ -70,4 +70,3 @@ export async function createRegisteredUser(input: {
 
   return user
 }
-

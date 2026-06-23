@@ -209,12 +209,12 @@ async function readScopedValue<T>(
           where: { email: normalizedEmail },
         })
         if (assessment) {
-          return ({
+          return {
             currentQuestionIndex: assessment.currentQuestionIndex,
             answers: assessment.answers,
             completed: assessment.completed,
             resultMessage: assessment.resultMessage,
-          } as T)
+          } as T
         }
         return cloneValue(fallback)
       }
@@ -223,11 +223,11 @@ async function readScopedValue<T>(
           where: { email: normalizedEmail },
         })
         if (profile) {
-          return ({
+          return {
             dailyReminder: profile.dailyReminder,
             journalLock: profile.journalLock,
             anonymousInsights: profile.anonymousInsights,
-          } as T)
+          } as T
         }
         return cloneValue(fallback)
       }
@@ -628,7 +628,7 @@ export async function saveAssessmentAnswer(answer: string, userEmail?: string): 
   return buildAssessmentState(nextProgress)
 }
 
-export async function moveAssessment(direction: 'back' | 'continue' | 'reset', userEmail?: string) {
+export async function moveAssessment(direction: 'back' | 'reset', userEmail?: string) {
   if (direction === 'reset') {
     const resetProgress: StoredAssessmentProgress = {
       currentQuestionIndex: 0,
@@ -642,13 +642,7 @@ export async function moveAssessment(direction: 'back' | 'continue' | 'reset', u
   }
 
   const progress = await readAssessmentProgress(userEmail)
-  let nextIndex = progress.currentQuestionIndex
-
-  if (direction === 'back') {
-    nextIndex = Math.max(0, nextIndex - 1)
-  } else if (progress.answers[nextIndex]) {
-    nextIndex = Math.min(assessmentQuestions.length - 1, nextIndex + 1)
-  }
+  const nextIndex = Math.max(0, progress.currentQuestionIndex - 1)
 
   const nextProgress: StoredAssessmentProgress = {
     ...progress,
@@ -697,4 +691,3 @@ export async function getLoginUser() {
 export async function getResourcesForHome(): Promise<ResourceItem[]> {
   return getResources()
 }
-
