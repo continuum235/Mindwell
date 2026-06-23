@@ -1505,3 +1505,188 @@ em {
 .to-transparent {
   --tw-gradient-to: transparent;
 }
+
+.psychologist-banner {
+  margin-top: 64px;
+}
+
+.psychologist-banner-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: linear-gradient(135deg, rgba(140, 154, 139, 0.12), rgba(196, 164, 157, 0.12));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+
+.psychologist-banner-body h2 {
+  margin-bottom: 8px;
+}
+
+.psychologist-banner-body p {
+  margin-bottom: 0;
+}
+
+.psychologist-banner-cta {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.psychologist-section {
+  margin-top: 64px;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0 0 40px;
+}
+
+.psychologist-search {
+  margin: 24px 0;
+}
+
+.psychologist-search-field {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.psychologist-input {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.psychologist-input:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 3px rgba(140, 154, 139, 0.15);
+}
+
+.psychologist-input:disabled {
+  opacity: 0.6;
+}
+
+.psychologist-search-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.psychologist-error {
+  padding: 12px 16px;
+  background: rgba(184, 111, 87, 0.1);
+  border: 1px solid rgba(184, 111, 87, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--terracotta);
+  font-size: 0.9rem;
+  margin: 16px 0;
+}
+
+.psychologist-location-label {
+  font-size: 0.85rem;
+  color: rgba(58, 53, 50, 0.6);
+  margin: 16px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.psychologist-count {
+  font-size: 0.9rem;
+  color: var(--sage);
+  font-weight: 500;
+  margin: 8px 0 16px;
+}
+
+.psychologist-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  margin-top: 8px;
+}
+
+.psychologist-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.psychologist-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.psychologist-card-body {
+  padding: 20px;
+  display: grid;
+  gap: 8px;
+}
+
+.psychologist-name {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.psychologist-type {
+  display: inline-block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--sage-muted);
+  color: var(--sage);
+  font-weight: 500;
+  width: fit-content;
+}
+
+.psychologist-detail {
+  font-size: 0.9rem;
+  color: rgba(58, 53, 50, 0.75);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.psychologist-icon {
+  font-size: 1rem;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.psychologist-link {
+  color: var(--terracotta);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity var(--transition-fast);
+}
+
+.psychologist-link:hover {
+  opacity: 0.7;
+}
+
+.psychologist-empty {
+  text-align: center;
+  padding: 32px;
+  color: rgba(58, 53, 50, 0.6);
+  font-size: 0.95rem;
+  background: var(--mist);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+}

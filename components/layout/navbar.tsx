@@ -13,6 +13,7 @@ const links = [
   { href: '/journal', label: 'Journal' },
   { href: '/companion', label: 'Companion' },
   { href: '/stress', label: 'Resources' },
+  { href: '/psychologists', label: 'Find a Psychologist' },
   { href: '/assessment', label: 'Assessment' },
   { href: '/profile', label: 'Profile' },
 ]

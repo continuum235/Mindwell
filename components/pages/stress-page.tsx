@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import AnimatedBackdrop from '@/components/layout/animated-backdrop'
 import { containerVariants, gridVariants, itemVariants } from '@/lib/animations'
 import { fetchJson } from '@/lib/fetcher'
@@ -102,6 +103,20 @@ export default function StressPage() {
               </div>
             </motion.article>
           ))}
+        </motion.div>
+
+        <motion.div className="psychologist-banner" variants={itemVariants}>
+          <hr className="section-divider" />
+          <div className="psychologist-banner-body">
+            <div>
+              <p className="eyebrow">Professional support</p>
+              <h2>Find a psychologist near you.</h2>
+              <p>Search for licensed psychologists and mental health professionals in your area.</p>
+            </div>
+            <Link href="/psychologists" className="btn btn-primary psychologist-banner-cta">
+              Search now
+            </Link>
+          </div>
         </motion.div>
       </motion.div>
     </section>

@@ -8,7 +8,14 @@ export async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit)
   })
 
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`)
+    let message = `Request failed with status ${response.status}`
+    try {
+      const body = await response.json()
+      if (body.error) message = body.error
+    } catch {
+      // ignore parse error, use fallback message
+    }
+    throw new Error(message)
   }
 
   return (await response.json()) as T

@@ -20,6 +20,17 @@ export interface ResourceItem {
   image: string
 }
 
+export interface Psychologist {
+  id: string
+  name: string
+  address: string
+  phone?: string
+  website?: string
+  type: string
+  lat: number
+  lon: number
+}
+
 export interface ChatMessage {
   sender: 'companion' | 'user'
   text: string
