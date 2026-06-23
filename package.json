@@ -12,12 +12,16 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
     "mongodb": "^6.20.0",
     "next": "^16.0.0",
     "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.22.0",
+    "prisma": "^7.8.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
@@ -26,6 +30,7 @@
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "dotenv": "^16.4.3",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
