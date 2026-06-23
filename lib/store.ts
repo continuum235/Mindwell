@@ -1,13 +1,13 @@
-import type { Db } from 'mongodb'
+import { prismaClient } from '@/lib/prisma'
 import { createDefaultState } from '@/lib/defaults'
 import { formatLongDate, formatShortDate, getTodayCalendarDay } from '@/lib/date'
-import { getDb } from '@/lib/mongodb'
 import type {
   AppState,
   AssessmentState,
   ChatMessage,
   HomeSnapshot,
   JournalEntry,
+  LoginUser,
   MoodEntry,
   MoodTone,
   ProfileSettings,
@@ -15,8 +15,6 @@ import type {
 } from '@/types/app'
 
 const STATE_ID = 'mindwell-state'
-
-type StateDocument = AppState & { key: string }
 
 interface AssessmentQuestion {
   question: string
@@ -74,90 +72,286 @@ function userKey(email: string) {
   return email.trim().toLowerCase()
 }
 
-async function readStateFromDb(db: Db): Promise<AppState> {
-  const collection = db.collection('app_state')
-  const existing = (await collection.findOne({ key: STATE_ID })) as StateDocument | null
+async function readStateFromDb(): Promise<AppState> {
+  try {
+    const state = await prismaClient.globalState.findUnique({
+      where: { id: STATE_ID },
+    })
 
-  if (existing) {
-    const { key, ...state } = existing
-    void key
-    return state
+    if (state) {
+      return {
+        moods: (state.moods as unknown as MoodEntry[]) || [],
+        journalEntries: (state.journalEntries as unknown as JournalEntry[]) || [],
+        resources: (state.resources as unknown as ResourceItem[]) || [],
+        chatMessages: (state.chatMessages as unknown as ChatMessage[]) || [],
+        profileSettings: (state.profileSettings as unknown as ProfileSettings) || createDefaultState().profileSettings,
+        assessment: (state.assessment as unknown as AssessmentState) || createDefaultState().assessment,
+        user: (state.user as unknown as LoginUser) || createDefaultState().user,
+      }
+    }
+
+    const seeded = createDefaultState()
+    await prismaClient.globalState.create({
+      data: {
+        id: STATE_ID,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        moods: seeded.moods as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        journalEntries: seeded.journalEntries as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resources: seeded.resources as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        chatMessages: seeded.chatMessages as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        profileSettings: seeded.profileSettings as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        assessment: seeded.assessment as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        user: seeded.user as any,
+      },
+    })
+    return seeded
+  } catch {
+    // If database is unavailable, use memory
+    return cloneValue(memoryState)
   }
-
-  const seeded = createDefaultState()
-  await collection.replaceOne({ key: STATE_ID }, { key: STATE_ID, ...seeded }, { upsert: true })
-  return seeded
 }
 
-async function writeStateToDb(db: Db, state: AppState) {
-  const collection = db.collection('app_state')
-  await collection.replaceOne({ key: STATE_ID }, { key: STATE_ID, ...state }, { upsert: true })
+async function writeStateToDb(state: AppState) {
+  try {
+    await prismaClient.globalState.upsert({
+      where: { id: STATE_ID },
+      update: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        moods: state.moods as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        journalEntries: state.journalEntries as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resources: state.resources as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        chatMessages: state.chatMessages as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        profileSettings: state.profileSettings as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        assessment: state.assessment as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        user: state.user as any,
+      },
+      create: {
+        id: STATE_ID,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        moods: state.moods as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        journalEntries: state.journalEntries as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resources: state.resources as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        chatMessages: state.chatMessages as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        profileSettings: state.profileSettings as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        assessment: state.assessment as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        user: state.user as any,
+      },
+    })
+  } catch {
+    // If database is unavailable, use memory
+    memoryState = cloneValue(state)
+  }
 }
 
 import { cache } from 'react'
 
-const getCachedState = cache(async (db: Db) => {
-  return readStateFromDb(db)
+const getCachedState = cache(async () => {
+  return readStateFromDb()
 })
 
 async function readState() {
-  const db = await getDb()
-
-  if (!db) {
-    return cloneValue(memoryState)
-  }
-
   // Use React cache for request-scoped deduplication
-  return getCachedState(db)
+  return getCachedState()
 }
 
 async function writeState(state: AppState) {
-  const db = await getDb()
-
-  if (!db) {
-    memoryState = cloneValue(state)
-    return
-  }
-
-  await writeStateToDb(db, state)
+  await writeStateToDb(state)
 }
 
 async function readScopedValue<T>(
-  collectionName: string,
-  keyPrefix: string,
+  modelName: 'moods' | 'journals' | 'chats' | 'assessments' | 'profiles',
   email: string,
   fallback: T,
   memoryMap: Map<string, T>,
 ): Promise<T> {
   const normalizedEmail = userKey(email)
-  const db = await getDb()
 
-  if (!db) {
+  try {
+    switch (modelName) {
+      case 'moods': {
+        const moods = await prismaClient.moodEntry.findMany({
+          where: { email: normalizedEmail },
+        })
+        return (moods.length > 0 ? moods : fallback) as T
+      }
+      case 'journals': {
+        const journals = await prismaClient.journalEntry.findMany({
+          where: { email: normalizedEmail },
+        })
+        return (journals.length > 0 ? journals : fallback) as T
+      }
+      case 'chats': {
+        const messages = await prismaClient.chatMessage.findMany({
+          where: { email: normalizedEmail },
+        })
+        return (messages.length > 0 ? messages : fallback) as T
+      }
+      case 'assessments': {
+        const assessment = await prismaClient.userAssessment.findUnique({
+          where: { email: normalizedEmail },
+        })
+        if (assessment) {
+          return ({
+            currentQuestionIndex: assessment.currentQuestionIndex,
+            answers: assessment.answers,
+            completed: assessment.completed,
+            resultMessage: assessment.resultMessage,
+          } as T)
+        }
+        return cloneValue(fallback)
+      }
+      case 'profiles': {
+        const profile = await prismaClient.profileSettings.findUnique({
+          where: { email: normalizedEmail },
+        })
+        if (profile) {
+          return ({
+            dailyReminder: profile.dailyReminder,
+            journalLock: profile.journalLock,
+            anonymousInsights: profile.anonymousInsights,
+          } as T)
+        }
+        return cloneValue(fallback)
+      }
+    }
+  } catch {
+    // If database is unavailable, fall back to memory
     return cloneValue(memoryMap.get(normalizedEmail) ?? fallback)
   }
-
-  const collection = db.collection<{ key: string; value: T }>(collectionName)
-  const doc = await collection.findOne({ key: `${keyPrefix}-${normalizedEmail}` })
-  return cloneValue(doc?.value ?? fallback)
 }
 
 async function writeScopedValue<T>(
-  collectionName: string,
-  keyPrefix: string,
+  modelName: 'moods' | 'journals' | 'chats' | 'assessments' | 'profiles',
   email: string,
   value: T,
   memoryMap: Map<string, T>,
 ) {
   const normalizedEmail = userKey(email)
-  const db = await getDb()
 
-  if (!db) {
+  try {
+    switch (modelName) {
+      case 'moods': {
+        // Clear and re-insert all moods for this user
+        await prismaClient.moodEntry.deleteMany({
+          where: { email: normalizedEmail },
+        })
+        const moods = value as T extends MoodEntry[] ? T : MoodEntry[]
+        if (Array.isArray(moods)) {
+          for (const mood of moods) {
+            await prismaClient.moodEntry.create({
+              data: {
+                email: normalizedEmail,
+                day: (mood as MoodEntry).day,
+                label: (mood as MoodEntry).label,
+                tone: (mood as MoodEntry).tone,
+                note: (mood as MoodEntry).note,
+                createdAt: new Date((mood as MoodEntry).createdAt),
+              },
+            })
+          }
+        }
+        break
+      }
+      case 'journals': {
+        // Clear and re-insert all journals for this user
+        await prismaClient.journalEntry.deleteMany({
+          where: { email: normalizedEmail },
+        })
+        const journals = value as T extends JournalEntry[] ? T : JournalEntry[]
+        if (Array.isArray(journals)) {
+          for (const journal of journals) {
+            await prismaClient.journalEntry.create({
+              data: {
+                email: normalizedEmail,
+                date: (journal as JournalEntry).date,
+                note: (journal as JournalEntry).note,
+              },
+            })
+          }
+        }
+        break
+      }
+      case 'chats': {
+        // Clear and re-insert all chat messages for this user
+        await prismaClient.chatMessage.deleteMany({
+          where: { email: normalizedEmail },
+        })
+        const messages = value as T extends ChatMessage[] ? T : ChatMessage[]
+        if (Array.isArray(messages)) {
+          for (const message of messages) {
+            await prismaClient.chatMessage.create({
+              data: {
+                email: normalizedEmail,
+                sender: (message as ChatMessage).sender,
+                text: (message as ChatMessage).text,
+                createdAt: new Date((message as ChatMessage).createdAt),
+              },
+            })
+          }
+        }
+        break
+      }
+      case 'assessments': {
+        const assessment = value as T extends StoredAssessmentProgress ? T : StoredAssessmentProgress
+        await prismaClient.userAssessment.upsert({
+          where: { email: normalizedEmail },
+          create: {
+            email: normalizedEmail,
+            currentQuestionIndex: (assessment as StoredAssessmentProgress).currentQuestionIndex,
+            answers: (assessment as StoredAssessmentProgress).answers,
+            completed: (assessment as StoredAssessmentProgress).completed,
+            resultMessage: (assessment as StoredAssessmentProgress).resultMessage,
+          },
+          update: {
+            currentQuestionIndex: (assessment as StoredAssessmentProgress).currentQuestionIndex,
+            answers: (assessment as StoredAssessmentProgress).answers,
+            completed: (assessment as StoredAssessmentProgress).completed,
+            resultMessage: (assessment as StoredAssessmentProgress).resultMessage,
+          },
+        })
+        break
+      }
+      case 'profiles': {
+        const profile = value as T extends ProfileSettings ? T : ProfileSettings
+        await prismaClient.profileSettings.upsert({
+          where: { email: normalizedEmail },
+          create: {
+            email: normalizedEmail,
+            dailyReminder: (profile as ProfileSettings).dailyReminder,
+            journalLock: (profile as ProfileSettings).journalLock,
+            anonymousInsights: (profile as ProfileSettings).anonymousInsights,
+          },
+          update: {
+            dailyReminder: (profile as ProfileSettings).dailyReminder,
+            journalLock: (profile as ProfileSettings).journalLock,
+            anonymousInsights: (profile as ProfileSettings).anonymousInsights,
+          },
+        })
+        break
+      }
+    }
+  } catch {
+    // If database is unavailable, fall back to memory
     memoryMap.set(normalizedEmail, cloneValue(value))
-    return
   }
-
-  const collection = db.collection<{ key: string; value: T }>(collectionName)
-  await collection.updateOne({ key: `${keyPrefix}-${normalizedEmail}` }, { $set: { value } }, { upsert: true })
 }
 
 function labelToTone(label: string): MoodTone {
@@ -247,8 +441,7 @@ async function readAssessmentProgress(email?: string) {
   }
 
   return readScopedValue(
-    'user_assessments',
-    'assessment',
+    'assessments',
     email,
     { currentQuestionIndex: 0, answers: [], completed: false, resultMessage: null },
     memoryAssessments,
@@ -263,7 +456,7 @@ async function writeAssessmentProgress(progress: StoredAssessmentProgress, email
     return
   }
 
-  await writeScopedValue('user_assessments', 'assessment', email, progress, memoryAssessments)
+  await writeScopedValue('assessments', email, progress, memoryAssessments)
 }
 
 export async function getHomeSnapshot(userEmail?: string): Promise<HomeSnapshot> {
@@ -309,7 +502,7 @@ export async function getMoods(userEmail?: string) {
     return state.moods
   }
 
-  return readScopedValue('user_moods', 'moods', userEmail, [], memoryMoods)
+  return readScopedValue('moods', userEmail, [], memoryMoods)
 }
 
 export async function saveMood(label: string, note?: string, day?: number, userEmail?: string) {
@@ -332,11 +525,11 @@ export async function saveMood(label: string, note?: string, day?: number, userE
     return state.moods
   }
 
-  const moods = await readScopedValue('user_moods', 'moods', userEmail, [], memoryMoods)
+  const moods = await readScopedValue('moods', userEmail, [], memoryMoods)
   const nextMoods = moods.filter((item) => item.day !== targetDay)
   nextMoods.push(entry)
   nextMoods.sort((left, right) => left.day - right.day)
-  await writeScopedValue('user_moods', 'moods', userEmail, nextMoods, memoryMoods)
+  await writeScopedValue('moods', userEmail, nextMoods, memoryMoods)
   return nextMoods
 }
 
@@ -346,7 +539,7 @@ export async function getJournalEntries(userEmail?: string) {
     return state.journalEntries
   }
 
-  return readScopedValue('user_journals', 'journal', userEmail, [], memoryJournals)
+  return readScopedValue('journals', userEmail, [], memoryJournals)
 }
 
 export async function saveJournalEntry(note: string, userEmail?: string) {
@@ -362,9 +555,9 @@ export async function saveJournalEntry(note: string, userEmail?: string) {
     return state.journalEntries
   }
 
-  const entries = await readScopedValue('user_journals', 'journal', userEmail, [], memoryJournals)
+  const entries = await readScopedValue('journals', userEmail, [], memoryJournals)
   const nextEntries = [entry, ...entries.filter((item) => item.note !== note)].slice(0, 10)
-  await writeScopedValue('user_journals', 'journal', userEmail, nextEntries, memoryJournals)
+  await writeScopedValue('journals', userEmail, nextEntries, memoryJournals)
   return nextEntries
 }
 
@@ -374,7 +567,7 @@ export async function getChatMessages(userEmail?: string) {
     return state.chatMessages
   }
 
-  return readScopedValue('user_chats', 'chat', userEmail, [], memoryChats)
+  return readScopedValue('chats', userEmail, [], memoryChats)
 }
 
 export async function saveChatExchange(text: string, reply: string, userEmail?: string) {
@@ -396,9 +589,9 @@ export async function saveChatExchange(text: string, reply: string, userEmail?: 
     return state.chatMessages
   }
 
-  const messages = await readScopedValue('user_chats', 'chat', userEmail, [], memoryChats)
+  const messages = await readScopedValue('chats', userEmail, [], memoryChats)
   const nextMessages = [...messages, userMessage, companionMessage].slice(-12)
-  await writeScopedValue('user_chats', 'chat', userEmail, nextMessages, memoryChats)
+  await writeScopedValue('chats', userEmail, nextMessages, memoryChats)
   return nextMessages
 }
 
@@ -472,7 +665,7 @@ export async function getProfileSettings(userEmail?: string) {
     return state.profileSettings
   }
 
-  return readScopedValue('user_profiles', 'profile', userEmail, createDefaultState().profileSettings, memoryProfiles)
+  return readScopedValue('profiles', userEmail, createDefaultState().profileSettings, memoryProfiles)
 }
 
 export async function updateProfileSettings(settings: Partial<ProfileSettings>, userEmail?: string) {
@@ -492,7 +685,7 @@ export async function updateProfileSettings(settings: Partial<ProfileSettings>, 
     ...settings,
   }
 
-  await writeScopedValue('user_profiles', 'profile', userEmail, nextProfile, memoryProfiles)
+  await writeScopedValue('profiles', userEmail, nextProfile, memoryProfiles)
   return nextProfile
 }
 
@@ -504,3 +697,4 @@ export async function getLoginUser() {
 export async function getResourcesForHome(): Promise<ResourceItem[]> {
   return getResources()
 }
+

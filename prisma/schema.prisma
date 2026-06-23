@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model GlobalState {
+  id                  String   @id @default("mindwell-state")
+  moods               Json     @default("[]")
+  journalEntries      Json     @default("[]")
+  resources           Json     @default("[]")
+  chatMessages        Json     @default("[]")
+  profileSettings     Json     @default("{}")
+  assessment          Json     @default("{}")
+  user                Json     @default("{}")
+  updatedAt           DateTime @updatedAt
+}
+
+model RegisteredUser {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  moods         MoodEntry[]
+  journals      JournalEntry[]
+  chatMessages  ChatMessage[]
+  assessment    UserAssessment?
+  profileSettings ProfileSettings?
+}
+
+model MoodEntry {
+  id        String   @id @default(cuid())
+  email     String
+  user      RegisteredUser @relation(fields: [email], references: [email], onDelete: Cascade)
+  day       Int
+  label     String
+  tone      String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([email, day])
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  email     String
+  user      RegisteredUser @relation(fields: [email], references: [email], onDelete: Cascade)
+  date      String
+  note      String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  email     String
+  user      RegisteredUser @relation(fields: [email], references: [email], onDelete: Cascade)
+  sender    String   // 'user' or 'companion'
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model UserAssessment {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  user                  RegisteredUser @relation(fields: [email], references: [email], onDelete: Cascade)
+  currentQuestionIndex  Int      @default(0)
+  answers               String[] @default([]) // JSON array stored as text
+  completed             Boolean  @default(false)
+  resultMessage         String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model ProfileSettings {
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  user                RegisteredUser @relation(fields: [email], references: [email], onDelete: Cascade)
+  dailyReminder       Boolean  @default(true)
+  journalLock         Boolean  @default(false)
+  anonymousInsights   Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
