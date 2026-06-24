@@ -81,6 +81,7 @@ export default function PsychologistsPage({ initialLocation }: { initialLocation
         <motion.p variants={itemVariants}>
           Search for licensed psychologists and mental health professionals in your area. Type a city or location below
           to find contact details for nearby providers.
+          (for now this is limited to popular cities like London, New York & Tokyo..later we will add,)
         </motion.p>
 
         <form className="psychologist-search" onSubmit={handleSearch} aria-label="Search for psychologists by location">
